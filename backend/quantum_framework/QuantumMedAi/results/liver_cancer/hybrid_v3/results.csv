@@ -1,0 +1,11 @@
+metric,value
+test_accuracy,0.986
+test_balanced_accuracy,0.9885433715220949
+macro_precision,0.9826302729528535
+macro_recall,0.9885433715220949
+macro_f1,0.9853669141748612
+weighted_f1,0.9860426115459228
+roc_auc,0.9987462081210372
+best_epoch,5.0
+best_validation_combined,0.9818907134617831
+threshold,0.3

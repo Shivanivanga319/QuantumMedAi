@@ -1,0 +1,2 @@
+disease,model,cv_accuracy,test_accuracy,precision,recall,f1_score
+kidney_stone,Tuned Random Forest,74.59972862957936,68.67469879518072,64.1025641025641,67.56756756756756,65.78947368421053

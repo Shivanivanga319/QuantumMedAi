@@ -1,0 +1,51 @@
+HYBRID QUANTUM LIVER CANCER MODEL
+============================================================
+
+Best Epoch: 19
+Validation Combined: 0.824073
+Selected Threshold: 0.5000
+
+Test Accuracy: 0.575758
+Balanced Accuracy: 0.582692
+Macro Precision: 0.579044
+Macro Recall: 0.582692
+Macro F1: 0.572222
+Weighted F1: 0.580471
+ROC-AUC: 0.676923
+
+Confusion Matrix:
+[[ 8  5]
+ [ 9 11]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0     0.4706    0.6154    0.5333        13
+           1     0.6875    0.5500    0.6111        20
+
+    accuracy                         0.5758        33
+   macro avg     0.5790    0.5827    0.5722        33
+weighted avg     0.6020    0.5758    0.5805        33
+
+
+Selected Features:
+- Symptoms
+- Obesity
+- Liver_Metastasis
+- Performance_Status
+- Alpha_Fetoprotein
+- Albumin
+- Aspartate_Transaminase
+- Alkaline_Phosphatase
+- Direct_Bilirubin
+- Iron
+
+
+LEAKAGE AUDIT:
+Preprocessing fitted on: TRAIN ONLY
+Feature selection fitted on: TRAIN ONLY
+Scaler fitted on: TRAIN ONLY
+SMOTE applied to: TRAIN ONLY
+Validation used for model selection: YES
+Threshold selected from: VALIDATION ONLY
+Test used for tuning: NO

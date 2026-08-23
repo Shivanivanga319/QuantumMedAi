@@ -1,0 +1,9 @@
+Metric,Score
+Best Validation Accuracy,78.69565217391305
+Best Validation Balanced Accuracy,62.52180788099211
+Best Validation Macro-F1,64.70692870958828
+Test Accuracy,76.08695652173914
+Test Balanced Accuracy,66.82287355762209
+Macro Precision,60.35511363636363
+Macro Recall,66.82287355762209
+Macro F1 Score,62.011892428559094

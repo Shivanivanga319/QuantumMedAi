@@ -1,0 +1,6 @@
+Fold,Best_Epoch,Accuracy,Precision,Recall,F1_Score,Balanced_Accuracy,ROC_AUC,Threshold,Train_Size,Validation_Size,Selected_Features
+1,23,100.0,100.0,100.0,100.0,100.0,100.0,0.5100000000000002,79,20,Temperature of patient|Occurrence of nausea|Lumbar pain|Urine pushing (continuous need for urination)|Micturition pains|Inflammation of urinary bladder
+2,14,100.0,100.0,100.0,100.0,100.0,100.0,0.5300000000000002,79,20,"Temperature of patient|Occurrence of nausea|Lumbar pain|Urine pushing (continuous need for urination)|Burning of urethra, itch, swelling of urethra outlet|Inflammation of urinary bladder"
+3,33,100.0,100.0,100.0,100.0,100.0,100.0,0.5000000000000002,79,20,"Temperature of patient|Occurrence of nausea|Lumbar pain|Micturition pains|Burning of urethra, itch, swelling of urethra outlet|Inflammation of urinary bladder"
+4,14,100.0,100.0,100.0,100.0,100.0,100.0,0.5600000000000003,79,20,"Temperature of patient|Occurrence of nausea|Lumbar pain|Urine pushing (continuous need for urination)|Burning of urethra, itch, swelling of urethra outlet|Inflammation of urinary bladder"
+5,10,100.0,100.0,100.0,100.0,100.0,100.0,0.5000000000000002,80,19,"Temperature of patient|Occurrence of nausea|Lumbar pain|Micturition pains|Burning of urethra, itch, swelling of urethra outlet|Inflammation of urinary bladder"

@@ -1,0 +1,13 @@
+Metric,Score
+Best Validation Accuracy,63.63636363636363
+Best Validation Balanced Accuracy,57.88461538461538
+Best Validation F1,73.91304347826086
+Selected Threshold,0.5
+Validation Threshold Balanced Accuracy,57.88461538461538
+Validation Threshold F1,73.91304347826086
+Test Accuracy,66.66666666666666
+Test Balanced Accuracy,59.03846153846154
+Precision,65.51724137931035
+Recall,95.0
+F1 Score,77.55102040816327
+ROC-AUC,66.92307692307693

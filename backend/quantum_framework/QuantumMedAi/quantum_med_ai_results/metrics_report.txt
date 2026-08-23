@@ -1,0 +1,20 @@
+QUANTUM MED AI - FINAL RESULTS
+==================================================
+Accuracy : 83.91%
+Precision: 74.12%
+Recall   : 80.77%
+F1 Score : 77.30%
+
+Confusion Matrix:
+[[130  22]
+ [ 15  63]]
+
+Classification Report:
+                precision    recall  f1-score   support
+
+No Fatty Liver       0.90      0.86      0.88       152
+   Fatty Liver       0.74      0.81      0.77        78
+
+      accuracy                           0.84       230
+     macro avg       0.82      0.83      0.82       230
+  weighted avg       0.84      0.84      0.84       230

@@ -1,0 +1,2 @@
+best_validation_accuracy,best_validation_f1,selected_threshold,test_accuracy,test_balanced_accuracy,precision,recall,f1_score,best_epoch,selected_features
+97.5,95.87628865979381,0.5800000000000003,96.5,95.61894605882875,94.9579831932773,93.38842975206612,94.16666666666667,27,16

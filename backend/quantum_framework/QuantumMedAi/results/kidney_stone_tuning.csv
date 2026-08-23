@@ -1,0 +1,2 @@
+disease,model,cv_accuracy,test_accuracy,precision,recall,f1_score
+kidney_stone,Tuned Logistic Regression,74.30574400723656,73.49397590361446,71.42857142857143,67.56756756756756,69.44444444444444

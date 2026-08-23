@@ -1,0 +1,28 @@
+HYBRID QUANTUM V3
+=================
+
+Best Epoch: 5
+Best Validation Combined: 98.19%
+Selected Threshold: 0.30
+
+Test Accuracy: 98.60%
+Balanced Accuracy: 98.85%
+Macro Precision: 98.26%
+Macro Recall: 98.85%
+Macro F1: 98.54%
+Weighted F1: 98.60%
+ROC-AUC: 99.87%
+
+Confusion Matrix:
+[[389   0]
+ [ 14 597]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.97      1.00      0.98       389
+           1       1.00      0.98      0.99       611
+
+    accuracy                           0.99      1000
+   macro avg       0.98      0.99      0.99      1000
+weighted avg       0.99      0.99      0.99      1000

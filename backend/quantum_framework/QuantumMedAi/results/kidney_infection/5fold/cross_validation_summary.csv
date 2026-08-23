@@ -1,0 +1,7 @@
+Metric,Mean,Std,Mean_Plus_Minus_Std
+Accuracy,100.0,0.0,100.00 ± 0.00
+Precision,100.0,0.0,100.00 ± 0.00
+Recall,100.0,0.0,100.00 ± 0.00
+F1_Score,100.0,0.0,100.00 ± 0.00
+Balanced_Accuracy,100.0,0.0,100.00 ± 0.00
+ROC_AUC,100.0,0.0,100.00 ± 0.00

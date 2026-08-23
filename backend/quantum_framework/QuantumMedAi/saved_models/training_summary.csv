@@ -1,0 +1,3 @@
+disease,best_model,accuracy,precision,recall,f1
+pcos,Random Forest,99.5,99.5,99.5,99.5
+pcos,Random Forest,99.5,99.5,99.5,99.5

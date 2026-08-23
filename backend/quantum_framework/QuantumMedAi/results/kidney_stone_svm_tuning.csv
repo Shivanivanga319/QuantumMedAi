@@ -1,0 +1,2 @@
+disease,model,cv_accuracy,test_accuracy,precision,recall,f1_score
+kidney_stone,Tuned SVM,75.19674355495252,74.69879518072288,75.0,64.86486486486487,69.56521739130434

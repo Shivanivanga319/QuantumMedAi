@@ -1,0 +1,10 @@
+Metric,Score
+Best Validation Accuracy,91.48865153538051
+Best Validation Balanced Accuracy,91.70121942034226
+Best Validation F1,92.9225645295587
+Selected Threshold,0.4500000000000001
+Test Accuracy,91.32176234979973
+Test Balanced Accuracy,91.15193420101228
+Test Precision,93.88297872340425
+Test Recall,91.88720173535792
+Test F1,92.87436965577724

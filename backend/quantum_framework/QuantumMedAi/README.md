@@ -1,0 +1,1 @@
+QuantumMedAi:A Hybrid Quantum Deep Learning Framework For Multi Disease Prediction and Intelligent Emergency Response Support

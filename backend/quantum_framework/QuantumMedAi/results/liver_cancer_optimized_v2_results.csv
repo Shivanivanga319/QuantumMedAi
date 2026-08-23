@@ -1,0 +1,15 @@
+Metric,Score
+Best Validation Combined,43.86792452830189
+Best Validation Accuracy,60.60606060606061
+Best Validation Balanced Accuracy,50.0
+Best Validation Macro-F1,37.735849056603776
+Selected Threshold,0.69
+Validation Threshold Balanced Accuracy,48.07692307692308
+Validation Threshold Macro-F1,47.71668219944082
+Test Accuracy,81.81818181818183
+Test Balanced Accuracy,85.0
+Macro Precision,84.21052631578947
+Macro Recall,85.0
+Macro F1,81.80147058823529
+Weighted F1,81.91844919786095
+ROC-AUC,88.84615384615384

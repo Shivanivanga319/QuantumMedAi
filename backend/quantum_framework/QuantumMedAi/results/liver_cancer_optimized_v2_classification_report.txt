@@ -1,0 +1,16 @@
+LIVER CANCER CLASSIFICATION REPORT
+============================================================
+
+              precision    recall  f1-score   support
+
+     Class 0     0.6842    1.0000    0.8125        13
+     Class 1     1.0000    0.7000    0.8235        20
+
+    accuracy                         0.8182        33
+   macro avg     0.8421    0.8500    0.8180        33
+weighted avg     0.8756    0.8182    0.8192        33
+
+
+Confusion Matrix:
+[[13  0]
+ [ 6 14]]

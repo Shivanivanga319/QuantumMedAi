@@ -1,0 +1,2 @@
+Dataset,Best_Epoch,Validation_Combined,Selected_Threshold,Test_Accuracy,Balanced_Accuracy,Precision,Recall,F1_Score,ROC_AUC,Train_Size,Validation_Size,Test_Size,Quantum_Qubits,Quantum_Layers
+Kidney Infection,30,87.40234520349955,0.5300000000000002,88.95705521472392,90.13731343283582,79.86577181208054,95.19999999999999,86.86131386861314,95.3412935323383,1202,326,326,4,3
