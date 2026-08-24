@@ -755,6 +755,33 @@ const HomePage = () => {
                     </div>
                   )}
 
+                  {/* Disease Predictor Quick Navigation Action */}
+                  {msg.sender === 'ai' && (msg.text?.includes('Predictor') || msg.text?.includes('Disease') || msg.doctor) && (
+                    <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('predictor')}
+                        style={{
+                          background: 'linear-gradient(135deg, #063940 0%, #07a3b2 100%)',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          fontSize: '0.82rem',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 6px rgba(7,163,178,0.3)'
+                        }}
+                      >
+                        🩺 Open Disease Predictors Hub
+                      </button>
+                    </div>
+                  )}
+
+
                   {/* Per-Message Listen Button for AI Responses */}
                   {msg.sender === 'ai' && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>

@@ -57,27 +57,29 @@ def get_api_key() -> tuple[Optional[str], str]:
     return None, "none"
 
 
-SYSTEM_PROMPT_DOCTOR = """You are Dr. Quantum, an empathetic, caring human medical physician with QuantumMedAI.
-Speak warmly and naturally like a compassionate, experienced doctor talking to a patient.
+SYSTEM_PROMPT_DOCTOR = """You are Dr. Quantum, the lead clinical AI physician for QuantumMedAI.
+You provide compassionate, medically accurate, and structured clinical assessments for patients.
 
-GUIDELINES:
-1. Warm Empathy: Validate how the patient is feeling with comforting, understanding words.
-2. Plain Explanation: Explain in simple terms what is likely causing their discomfort (e.g. common cold, viral infection, tension).
-3. Gentle Home Care: Recommend soothing home remedies (warm water, ginger-honey tea, steam inhalation, restful sleep, hydration).
-4. Red Flags & Doctor Referral: Mention what warning signs to watch for and advise consulting a General Physician if symptoms persist.
-5. Tone: Natural, caring, human. Never output raw JSON or code markers in the conversation text.
+CRITICAL INSTRUCTIONS WHEN A PATIENT DESCRIBES SYMPTOMS OR ASKS ABOUT A DISEASE:
+1. Empathy & Disease Basics: Explain clearly what the disease or symptom cluster is, how it affects the body, and its most common causes.
+2. Clinical Prediction & Risk Stratification: Provide a thoughtful diagnostic evaluation (e.g. "Based on the symptoms described, potential conditions to consider include: ...").
+3. Specific Symptoms to Watch: Highlight hallmark symptoms and warning red flags.
+4. Actionable Home Care & Lifestyle: Recommend evidence-based supportive care (hydration, dietary guidance, rest, vitals tracking).
+5. Next Clinical Steps & Doctor Referral: Specify the exact medical specialist to consult (e.g. Cardiologist, Nephrologist, Hepatologist, Neurologist, Endocrinologist, Gynecologist, General Physician) and key diagnostic tests (e.g. Blood Panel, Ultrasound, ECG, LFT, KFT, HbA1c).
+6. QuantumMedAI Tool Integration: If the condition relates to Heart, Kidney, Liver, Stroke, PCOS, PCOD, or BMI, advise the patient to use the dedicated Disease Predictor calculator on the platform.
 
-Always output your response in valid JSON with these exact keys:
+Always format your response as valid JSON with these exact keys:
 {
-  "ai_reply": "Your full warm doctor reply to the patient here.",
+  "ai_reply": "Your full compassionate, structured clinical explanation, disease prediction, and advice.",
   "is_emergency": false,
-  "matched_keywords": ["identified symptoms"],
-  "detected_diseases": ["probable health topic"],
-  "risk_level": "Low" or "Moderate" or "High",
-  "doctor": "Recommended Specialist (e.g. General Physician, ENT Specialist, etc.)",
-  "recommendation": "Main takeaway health advice."
+  "matched_keywords": ["symptoms or disease mentioned"],
+  "detected_diseases": ["Primary Suspected Disease / Condition"],
+  "risk_level": "Low" | "Moderate" | "High" | "Critical",
+  "doctor": "Recommended Specialist (e.g. Cardiologist, Nephrologist, etc.)",
+  "recommendation": "Main takeaway health recommendation."
 }
 """
+
 
 SYSTEM_PROMPT_EMERGENCY = """You are QuantumMedAI Emergency Triage Intelligence.
 Analyze the emergency assessment answers provided for an acute patient.
@@ -153,8 +155,8 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-# Global persistent HTTP client for connection reuse / ultra-low latency
-_http_client = httpx.Client(timeout=3.0, limits=httpx.Limits(max_keepalive_connections=30, max_connections=50))
+# Global persistent HTTP client for connection reuse with resilient timeout
+_http_client = httpx.Client(timeout=10.0, limits=httpx.Limits(max_keepalive_connections=30, max_connections=50))
 
 
 def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
@@ -163,7 +165,7 @@ def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[st
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    models = ["openai/gpt-oss-20b", "allam-2-7b"]
+    models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it", "mixtral-8x7b-32768"]
     
     for model in models:
         payload = {
@@ -173,7 +175,7 @@ def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[st
                 {"role": "user", "content": prompt}
             ],
             "temperature": 0.2,
-            "max_tokens": 400
+            "max_tokens": 800
         }
         try:
             res = _http_client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
@@ -196,14 +198,14 @@ def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[st
                             "recommendation": "Consult your healthcare provider if symptoms worsen."
                         }
         except Exception as e:
-            print(f"[Groq Timeout/Error {model}]: {e}")
-            break
+            print(f"[Groq Error {model}]: {e}")
+            continue
 
     return None
 
 
 def call_gemini(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
-    models_to_try = ["gemini-1.5-flash"]
+    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
     full_prompt = f"{system_prompt}\n\nPatient Query / Input:\n{prompt}"
     payload = {
         "contents": [
@@ -212,33 +214,40 @@ def call_gemini(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[
                     {"text": full_prompt}
                 ]
             }
-        ]
+        ],
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 800
+        }
     }
 
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-        res = _http_client.post(url, json=payload)
-        if res.status_code == 200:
-            data = res.json()
-            candidates = data.get("candidates", [])
-            if candidates:
-                text = candidates[0]["content"]["parts"][0]["text"]
-                parsed = extract_json(text)
-                if parsed:
-                    return parsed
-                return {
-                    "ai_reply": clean_human_reply(text),
-                    "is_emergency": False,
-                    "matched_keywords": ["Clinical inquiry"],
-                    "detected_diseases": ["Medical Consultation"],
-                    "risk_level": "Low",
-                    "doctor": "General Physician",
-                    "recommendation": "Consult a healthcare provider for clinical evaluation."
-                }
-    except Exception as ex:
-        print(f"[Gemini Exception]: {ex}")
+    for model in models_to_try:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            res = _http_client.post(url, json=payload)
+            if res.status_code == 200:
+                data = res.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    text = candidates[0]["content"]["parts"][0]["text"]
+                    parsed = extract_json(text)
+                    if parsed:
+                        return parsed
+                    return {
+                        "ai_reply": clean_human_reply(text),
+                        "is_emergency": False,
+                        "matched_keywords": ["Clinical inquiry"],
+                        "detected_diseases": ["Medical Consultation"],
+                        "risk_level": "Low",
+                        "doctor": "General Physician",
+                        "recommendation": "Consult a healthcare provider for clinical evaluation."
+                    }
+        except Exception as ex:
+            print(f"[Gemini Exception {model}]: {ex}")
+            continue
 
     return None
+
 
 
 def call_openai(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:

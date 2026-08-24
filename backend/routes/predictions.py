@@ -44,17 +44,17 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
     
     if is_greeting:
         if language == "te":
-            reply = "నమస్కారం! నేను మీ క్వాంటమ్‌మెడ్ AI వైద్య సహాయకుడిని. నేను మీకు ఎలా సహాయపడగలను? మీరు మీ లక్షణాలను వివరించవచ్చు, ఆరోగ్య సంబంధిత ప్రశ్నలు అడగవచ్చు లేదా ప్రిస్క్రిప్షన్/ల్యాబ్ నివేదికలను అప్‌లోడ్ చేయవచ్చు."
+            reply = "నమస్కారం! నేను మీ క్వాంటమ్‌మెడ్ AI వైద్య సహాయకుడిని. నేను మీకు ఎలా సహాయపడగలను? మీరు మీ లక్షణాలను వివరించవచ్చు (ఉదాహరణకు: జ్వరం, గుండె సమస్యలు, కిడ్నీ, కాలేయం, డయాబెటిస్, థైరాయిడ్, PCOS మొదలైనవి), లేదా ప్రిస్క్రిప్షన్/ల్యాబ్ రిపోర్టులను అప్‌లోడ్ చేయవచ్చు."
             doc = "జనరల్ ఫిజీషియన్ (సాధారణ వైద్యులు)"
             rec = "మీరు ఎదుర్కొంటున్న లక్షణాలను లేదా ఆరోగ్య సమస్యలను వివరించండి."
         elif language == "hi":
-            reply = "नमस्ते! मैं आपका क्वांटममेड AI चिकित्सा सहायक हूँ। मैं आपकी क्या मदद कर सकता हूँ? आप अपने लक्षणों का वर्णन कर सकते हैं, स्वास्थ्य प्रश्न पूछ सकते हैं या लैब रिपोर्ट/पर्चे अपलोड कर सकते हैं।"
+            reply = "नमस्ते! मैं आपका क्वांटममेड AI चिकित्सा सहायक हूँ। मैं आपकी क्या मदद कर सकता हूँ? आप अपने लक्षणों का वर्णन कर सकते हैं (जैसे: बुखार, हृदय रोग, किडनी, लिवर, मधुमेह, थायराइड, पीसीओएस आदि) या लैब रिपोर्ट/पर्चे अपलोड कर सकते हैं।"
             doc = "सामान्य चिकित्सक (General Physician)"
             rec = "कृपया अपने लक्षणों या स्वास्थ्य संबंधी प्रश्नों को साझा करें।"
         else:
-            reply = "Hello! I am QuantumMedAI, an AI medical assistant. How can I help you today? You can describe any symptoms you are experiencing, ask health questions, or upload a prescription/lab report."
+            reply = "Hello! I am Dr. Quantum, your clinical AI physician assistant at QuantumMedAI. How can I assist you today? You can describe any symptoms (e.g. fever, chest heaviness, kidney pain, liver issues, diabetes, PCOS, stroke risk, etc.), ask for disease predictions, or upload a prescription/lab report."
             doc = "General Physician"
-            rec = "Feel free to describe any symptoms, when they began, or attach a medical report."
+            rec = "Feel free to describe your symptoms, ask about any health condition, or use our dedicated Disease Predictor calculators."
 
         return {
             "ai_reply": reply,
@@ -65,7 +65,6 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "doctor": doc,
             "recommendation": rec
         }
-
 
     # 2. Acute Emergency Red Flags
     emergency_patterns = [
@@ -107,174 +106,486 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "recommendation": rec
             }
 
-    # 3. General Malaise / "Not feeling well"
-    if any(phrase in t for phrase in ["not feeling well", "feeling sick", "feel unwell", "unwell", "not well", "బాగా లేదు", "నీరసంగా ఉంది", "तबीयत खराब", "अच्छा नहीं लग रहा"]):
+    # 3. Heart Disease, Hypertension & Cardiovascular Risk
+    if any(w in t for w in ["heart", "cardiac", "cardiovascular", "cholesterol", "blood pressure", "hypertension", "palpitation", "arrhythmia", "angina", "coronary", "గుండె", "హై బీపీ", "హృదయ", "कोलेस्ट्रॉल"]):
         if language == "te":
             reply = (
-                "మీ ఆరోగ్యం బాగాలేదని వినడానికి చింతిస్తున్నాను. మీకు మరింత సహాయపడటానికి కొన్ని వివరాలు చెప్పగలరా?\n\n"
-                "• **ముఖ్యమైన ప్రశ్నలు:**\n"
-                "  1. ఈ సమస్య ఎప్పుడు ప్రారంభమైంది?\n"
-                "  2. మీకు జ్వరం, తలనొప్పి, వాంతులు లేదా ఒంటి నొప్పులు ఉన్నాయా?\n"
-                "  3. తగినంత నీరు తాగుతున్నారా?\n\n"
-                "• **స్వీయ సంరక్షణ సలహాలు:**\n"
-                "  - బాగా విశ్రాంతి తీసుకోండి.\n"
-                "  - గోరువెచ్చని నీరు మరియు ఓఆర్‌ఎస్ (ORS) ద్రావణం తాగండి.\n"
-                "  - సమస్య 24-48 గంటలకు పైగా కొనసాగితే జనరల్ ఫిజీషియన్‌ను సంప్రదించండి."
+                "🫀 **గుండె & రక్తనాళాల ఆరోగ్య విశ్లేషణ (Cardiovascular Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** గుండె జబ్బులు మరియు అధిక రక్తపోటు రక్తనాళాలలో కొలెస్ట్రాల్ చేరడం వల్ల రక్తప్రసరణ తగ్గడం లేదా రక్తపోటు పెరగడం వల్ల కలుగుతాయి.\n"
+                "• **ముఖ్యమైన లక్షణాలు:** ఛాతీలో అసౌకర్యం, ఆయాసం, గుండె దడ, అలసట, తలతిరగడం.\n"
+                "• **ప్రాథమిక అంచనా (Disease Prediction):** కార్డియోవాస్కులర్ రిస్క్ ప్రొఫైల్ (మితమైన నుండి అధిక ప్రమాదం).\n"
+                "• **జీవనశైలి & సంరక్షణ:** ఉప్పు తగ్గించండి, నూనె/కొవ్వు పదార్థాలకు దూరంగా ఉండండి, రోజూ 30 నిమిషాలు నడవండి.\n"
+                "• **సిఫార్సు:** మా **🩺 Disease Predictors** ట్యాబ్‌లోని **Heart Disease Predictor** కాలిక్యులేటర్‌ను ఉపయోగించి ఖచ్చితమైన విశ్లేషణ పొందండి."
             )
-            doc = "జనరల్ ఫిజీషియన్"
-            rec = "విశ్రాంతి తీసుకోండి, పుష్కలంగా నీరు తాగండి మరియు శరీర ఉష్ణోగ్రతను గమనించండి."
+            doc = "కార్డియాలజిస్ట్ (గుండె నిపుణులు)"
+            rec = "బీపీ మరియు లిపిడ్ ప్రొఫైల్ తనిఖీ చేసుకోండి. కార్డియాలజిస్ట్‌ను సంప్రదించండి."
         elif language == "hi":
             reply = (
-                "मुझे यह जानकर खेद है कि आपकी तबीयत ठीक नहीं है। बेहतर मार्गदर्शन के लिए कृपया कुछ जानकारी साझा करें:\n\n"
-                "• **मुख्य प्रश्न:**\n"
-                "  1. यह समस्या कब से शुरू हुई?\n"
-                "  2. क्या बुखार, सिरदर्द, उल्टी या बदन दर्द है?\n\n"
-                "• **प्राथमिक देखभाल:**\n"
-                "  - भरपूर आराम करें।\n"
-                "  - गुनगुना पानी और ओआरएस पिएं।\n"
-                "  - यदि समस्या 24-48 घंटों तक बनी रहे, तो डॉक्टर से सलाह लें।"
+                "🫀 **हृदय और रक्तचाप स्वास्थ्य मूल्यांकन (Cardiovascular Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** हृदय रोग और उच्च रक्तचाप रक्त वाहिकाओं में रुकावट या उच्च तनाव के कारण होते हैं।\n"
+                "• **प्रमुख लक्षण:** सीने में भारीपन, सांस फूलना, दिल की धड़कन तेज होना, थकान, चक्कर आना।\n"
+                "• **रोग भविष्यवाणी (Prediction):** संभावित हृदय संबंधी जोखिम (मध्यम से उच्च)।\n"
+                "• **घरेलू देखभाल व जीवनशैली:** नमक और वसायुक्त भोजन कम करें, नियमित टहलें, तनाव से बचें।\n"
+                "• **सुझाव:** हमारे **🩺 Disease Predictors** टैब में जाकर **Heart Disease Predictor** का उपयोग करें।"
             )
-            doc = "सामान्य चिकित्सक (General Physician)"
-            rec = "आराम करें, पानी पिएं और तापमान की निगरानी करें।"
+            doc = "कार्डियोलॉजिस्ट (हृदय रोग विशेषज्ञ)"
+            rec = "रक्तचाप और लिपिड प्रोफाइल की जांच करवाएं। कार्डियोलॉजिस्ट से मिलें।"
         else:
             reply = (
-                "Hello. I'm sorry to hear that you are not feeling well. Because \"not feeling well\" (general malaise) can be an early sign of many different things—such as a mild viral infection, fatigue, dehydration, or stress—I would like to understand your situation a bit better.\n\n"
-                "### Follow-up Questions to Help Clarify:\n"
-                "1. **Specific Symptoms:** Are you experiencing fever, chills, headache, body aches, sore throat, cough, nausea, stomach upset, or dizziness?\n"
-                "2. **Onset & Duration:** How long have you felt this way, and did it come on suddenly or gradually?\n"
-                "3. **Severity:** How intense is the discomfort on a scale of 1 to 10?\n\n"
-                "### Supportive Home Care Measures:\n"
-                "- **Hydration:** Sip water, clear broths, or warm herbal teas throughout the day.\n"
-                "- **Rest:** Allow your body ample rest and avoid strenuous physical activities.\n\n"
-                "If your symptoms persist over the next 24–48 hours, please consult a General Physician."
+                "🫀 **Cardiovascular Disease & Heart Health Overview:**\n\n"
+                "• **Condition Basics:** Cardiovascular disorders and hypertension occur when arterial elasticity decreases or plaque accumulates, increasing cardiac workload and impeding blood flow.\n"
+                "• **Key Symptoms:** Chest tightness or aching, shortness of breath on exertion, irregular palpitations, unexplained fatigue, and lightheadedness.\n"
+                "• **Diagnostic Prediction:** Potential Cardiovascular / Hypertensive Risk Profile.\n"
+                "• **Supportive Lifestyle Actions:**\n"
+                "  - Restrict sodium intake to under 2g/day and limit saturated fats.\n"
+                "  - Engage in 30 minutes of moderate aerobic exercise (brisk walking).\n"
+                "  - Regularly log resting systolic and diastolic blood pressure.\n\n"
+                "💡 *QuantumMedAI Recommendation:* Visit our **🩺 Disease Predictors** tab and run the **Heart Disease Predictor** for full quantum-classical risk stratification."
             )
-            doc = "General Physician"
-            rec = "Rest, maintain hydration, monitor your temperature, and share specific symptoms."
+            doc = "Cardiologist"
+            rec = "Monitor resting blood pressure, get a Lipid Profile & ECG, and consult a Cardiologist."
 
         return {
             "ai_reply": reply,
             "is_emergency": False,
-            "matched_keywords": ["General Malaise"],
-            "detected_diseases": ["General Health Assessment"],
-            "risk_level": "Low",
+            "matched_keywords": ["Cardiovascular Markers", "Hypertension", "Heart Health"],
+            "detected_diseases": ["Cardiovascular Disease Risk"],
+            "risk_level": "Moderate",
             "doctor": doc,
             "recommendation": rec
         }
 
-
-    # 4. Headache / Migraine
-    if "headache" in t or "migraine" in t or "head pain" in t:
-        return {
-            "ai_reply": (
-                "Headaches can arise from several causes including tension, dehydration, eye strain, lack of sleep, or sinus congestion.\n\n"
-                "• **Recommended Actions:**\n"
-                "  - Rest in a dimly lit, quiet room.\n"
-                "  - Drink 1–2 glasses of water to rule out dehydration.\n"
-                "  - Apply a cool or warm compress to your forehead or the back of your neck.\n"
-                "  - Avoid screen time and bright lights.\n\n"
-                "⚠️ *Warning*: If the headache is sudden, severe ('thunderclap'), or accompanied by vision changes, numbness, or vomiting, seek immediate medical care."
-            ),
-            "is_emergency": False,
-            "matched_keywords": ["Headache", "Cranial discomfort"],
-            "detected_diseases": ["Tension Headache / Migraine Profile"],
-            "risk_level": "Moderate" if "severe" in t else "Low",
-            "doctor": "General Physician / Neurologist",
-            "recommendation": "Hydrate, rest in a dark room, and seek evaluation if pain is unusually severe or recurrent."
-        }
-
-    # 5. Fever / Cold / Cough / Flu
-    if any(w in t for w in ["fever", "cold", "cough", "flu", "sore throat", "runny nose", "congestion"]):
-        return {
-            "ai_reply": (
-                "These symptoms frequently indicate an upper respiratory tract infection or seasonal viral illness.\n\n"
+    # 4. Kidney Disease, Chronic Kidney Disease (CKD) & Kidney Stones
+    if any(w in t for w in ["kidney", "renal", "creatinine", "kidney stone", "proteinuria", "urea", "gfr", "కిడ్నీ", "మూత్రపిండ", "गुर्दा", "किडनी"]):
+        if language == "te":
+            reply = (
+                "💧 **కిడ్నీ (మూత్రపిండాల) ఆరోగ్య విశ్లేషణ (Renal Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** మూత్రపిండాలు రక్తాన్ని శుద్ధి చేసి వ్యర్థాలను బయటకు పంపుతాయి. క్రియాటినిన్ పెరగడం లేదా కిడ్నీలో రాళ్లు ఏర్పడటం మూత్రపిండాల పనితీరు తగ్గడానికి సూచికలు.\n"
+                "• **లక్షణాలు:** నడుము/పక్కటెముకల కింద నొప్పి, మూత్రంలో మంట లేదా నురుగు, కాళ్ల వాపు, నీరసం.\n"
+                "• **ప్రాథమిక అంచనా (Disease Prediction):** మూత్రపిండాల సమస్య లేదా కిడ్నీ స్టోన్ సంకేతం.\n"
+                "• **సంరక్షణ:** రోజుకు 2.5–3 లీటర్ల నీరు త్రాగండి, నొప్పి నివారణ మందులు (NSAIDs) అతిగా వాడకండి.\n"
+                "• **సిఫార్సు:** మా **🩺 Disease Predictors** ట్యాబ్‌లోని **Chronic Kidney Disease Predictor** ఉపయోగించండి."
+            )
+            doc = "నెఫ్రాలజిస్ట్ / యూరాలజిస్ట్"
+            rec = "సీరమ్ క్రియాటినిన్, బ్లడ్ యూరియా మరియు యూరిన్ రొటీన్ పరీక్ష చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "💧 **किडनी (गुर्दे) का स्वास्थ्य मूल्यांकन (Renal Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** किडनी शरीर से विषाक्त पदार्थों को फ़िल्टर करती है। सीरम क्रिएटिनिन का बढ़ना या पथरी बनना किडनी की कार्यक्षमता में कमी का संकेत है।\n"
+                "• **प्रमुख लक्षण:** पीठ के निचले हिस्से में दर्द, पेशाब में झाग या जलन, पैरों में सूजन, थकान।\n"
+                "• **रोग भविष्यवाणी (Prediction):** संभावित क्रॉनिक किडनी डिजीज (CKD) या किडनी स्टोन।\n"
+                "• **घरेलू देखभाल:** प्रतिदिन 3 लीटर पानी पिएं, बिना डॉक्टरी सलाह के पेनकिलर न लें।\n"
+                "• **सुझाव:** सटीक परिणाम के लिए हमारे **Chronic Kidney Disease Predictor** का उपयोग करें।"
+            )
+            doc = "नेफ्रोलॉजिस्ट / यूरोलॉजिस्ट"
+            rec = "किडनी फंक्शन टेस्ट (KFT) और यूरिन एनालिसिस करवाएं।"
+        else:
+            reply = (
+                "💧 **Renal Function & Kidney Disease Overview:**\n\n"
+                "• **Condition Basics:** The kidneys filter metabolic waste products and regulate electrolyte balance. Elevated serum creatinine, reduced eGFR, or crystal formation (stones) signal compromised renal clearance.\n"
+                "• **Key Symptoms:** Flank or lower back pain, frothy/cloudy urine, peripheral edema (ankle swelling), persistent fatigue, and altered urinary frequency.\n"
+                "• **Diagnostic Prediction:** Chronic Kidney Disease (CKD) / Nephrolithiasis Risk Profile.\n"
                 "• **Supportive Home Care:**\n"
-                "  - Stay well-hydrated with warm water, soups, and broths.\n"
-                "  - Steam inhalation can help relieve nasal and chest congestion.\n"
-                "  - Warm salt water gargles for sore throat relief.\n"
-                "  - Monitor your temperature with a thermometer.\n\n"
-                "Please consult a physician if fever exceeds 102°F (38.9°C), lasts over 3 days, or if breathing becomes labored."
-            ),
+                "  - Maintain adequate hydration (2.5–3 Liters of water daily).\n"
+                "  - Avoid self-medicating with over-the-counter NSAID pain relievers.\n"
+                "  - Restrict high-sodium and processed phosphorus-rich foods.\n\n"
+                "💡 *QuantumMedAI Recommendation:* Launch the **Chronic Kidney Disease Predictor** in our Disease Predictors tab for calibrated biomarker analysis."
+            )
+            doc = "Nephrologist / Urologist"
+            rec = "Check Serum Creatinine, BUN, eGFR, and Urine Albumin-to-Creatinine Ratio (uACR)."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": False,
-            "matched_keywords": ["Fever / Respiratory Symptoms"],
-            "detected_diseases": ["Viral Infection / Upper Respiratory Condition"],
-            "risk_level": "Moderate" if "high fever" in t else "Low",
-            "doctor": "General Physician / ENT Specialist",
-            "recommendation": "Stay hydrated, rest, take steam inhalation, and monitor temperature regularly."
+            "matched_keywords": ["Renal Biomarkers", "Creatinine", "Kidney Function"],
+            "detected_diseases": ["Chronic Kidney Disease / Renal Stone Evaluation"],
+            "risk_level": "Moderate",
+            "doctor": doc,
+            "recommendation": rec
         }
 
-    # 6. Stomach Pain / Digestion / Nausea / Vomiting / Acidity
-    if any(w in t for w in ["stomach", "abdominal", "nausea", "vomit", "acidity", "diarrhea", "constipation", "gas", "indigestion", "belly"]):
+    # 5. Liver Disease, Fatty Liver, Jaundice & Cirrhosis
+    if any(w in t for w in ["liver", "fatty liver", "jaundice", "cirrhosis", "bilirubin", "sgot", "sgpt", "alt", "ast", "hepatitis", "కాలేయం", "పచ్చకామెర్లు", "लिवर", "पीलिया"]):
+        if language == "te":
+            reply = (
+                "🧪 **కాలేయ (లివర్) ఆరోగ్య విశ్లేషణ (Hepatic Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** కాలేయం జీర్ణక్రియ, విషపదార్థాల తొలగింపు మరియు జీవక్రియలను నియంత్రిస్తుంది. ఫ్యాటీ లివర్ లేదా కామెర్లు (జాండిస్) కాలేయ వాపును సూచిస్తాయి.\n"
+                "• **లక్షణాలు:** కళ్ళు/చర్మం పసుపు రంగులోకి మారడం, కుడి పక్కటెముక కింద నొప్పి, ఆకలి మందగించడం, విపరీతమైన అలసట.\n"
+                "• **ప్రాథమిక అంచనా (Disease Prediction):** ఫ్యాటీ లివర్ / హెపాటిక్ ఇన్‌ఫ్లమేషన్ ప్రొఫైల్.\n"
+                "• **సంరక్షణ:** ఆల్కహాల్ పూర్తిగా మానేయండి, నూనె పదార్థాలు తగ్గించండి, యాంటీఆక్సిడెంట్లు అధికంగా ఉండే ఆహారం తీసుకోండి.\n"
+                "• **సిఫార్సు:** మా **🩺 Disease Predictors** లోని **Liver Disease Predictor** కాలిక్యులేటర్‌ను ఉపయోగించండి."
+            )
+            doc = "హెపటాలజిస్ట్ / గ్యాస్ట్రోఎంటరాలజిస్ట్"
+            rec = "లివర్ ఫంక్షన్ టెస్ట్ (LFT) మరియు అల్ట్రాసౌండ్ అబ్డామిన్ స్కాన్ చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "🧪 **लिवर स्वास्थ्य और पीलिया मूल्यांकन (Hepatic Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** लिवर शरीर में पाचन और डिटॉक्सीफिकेशन का मुख्य अंग है। फैटी लिवर या बिलीरुबिन का बढ़ना लिवर में सूजन का संकेत है।\n"
+                "• **प्रमुख लक्षण:** आंखें या त्वचा पीली पड़ना (पीलिया), भूख में कमी, पेट के ऊपरी दाहिने हिस्से में दर्द, अत्यधिक थकान।\n"
+                "• **रोग भविष्यवाणी (Prediction):** फैटी लिवर / हेपेटाइटिस जोखिम प्रोफ़ाइल।\n"
+                "• **घरेलू देखभाल:** शराब और तैलीय भोजन से बचें, हरी पत्तेदार सब्जियां और ताजे फल खाएं।\n"
+                "• **सुझाव:** विस्तृत जांच के लिए हमारे **Liver Disease Predictor** का उपयोग करें।"
+            )
+            doc = "हेपेटोलॉजिस्ट / गैस्ट्रोएंटेरोलॉजिस्ट"
+            rec = "लिवर फंक्शन टेस्ट (LFT - Bilirubin, SGOT, SGPT) और अल्ट्रासाउंड करवाएं।"
+        else:
+            reply = (
+                "🧪 **Hepatic Disease & Liver Health Overview:**\n\n"
+                "• **Condition Basics:** The liver is central to metabolic detoxification, bile production, and protein synthesis. Fatty liver disease (NAFLD/NASH), hepatitis, and jaundice occur when hepatic parenchyma is inflamed or overloaded with lipid deposits.\n"
+                "• **Key Symptoms:** Scleral/cutaneous jaundice (yellow eyes/skin), right upper quadrant abdominal tenderness, loss of appetite, dark urine, and chronic fatigue.\n"
+                "• **Diagnostic Prediction:** Fatty Liver Disease / Hepatic Dysfunction Profile.\n"
+                "• **Supportive Lifestyle Actions:**\n"
+                "  - Completely eliminate alcohol and refined fructose/syrups.\n"
+                "  - Adopt a Mediterranean diet rich in leafy greens, olive oil, and lean proteins.\n"
+                "  - Aim for gradual weight management (5–10% body weight reduction).\n\n"
+                "💡 *QuantumMedAI Recommendation:* Check your hepatic risk using the **Liver Disease Predictor** in our Disease Predictors suite."
+            )
+            doc = "Hepatologist / Gastroenterologist"
+            rec = "Obtain a Liver Function Test (Total Bilirubin, SGOT/AST, SGPT/ALT, Alkaline Phosphatase) and Ultrasound Abdomen."
+
+        return {
+            "ai_reply": reply,
+            "is_emergency": False,
+            "matched_keywords": ["Hepatic Markers", "Bilirubin", "Liver Function"],
+            "detected_diseases": ["Fatty Liver / Hepatic Disorder Evaluation"],
+            "risk_level": "Moderate",
+            "doctor": doc,
+            "recommendation": rec
+        }
+
+    # 6. Brain Stroke & Neurological Symptoms
+    if any(w in t for w in ["stroke", "brain stroke", "paralysis", "slurred", "numbness", "weakness on one side", "facial droop", "బ్రెయిన్ స్ట్రోక్", "పక్షవాతం", "लकवा", "ब्रेन स्ट्रोक"]):
+        if language == "te":
+            reply = (
+                "🧠 **బ్రెయిన్ స్ట్రోక్ & న్యూరోలాజికల్ హెచ్చరిక (Stroke Warning):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** మెదడుకు రక్తప్రసరణ ఆగిపోవడం వల్ల స్ట్రోక్ వస్తుంది. దీనికి తక్షణ చికిత్స అవసరం.\n"
+                "• **FAST సూత్రం:** F - ముఖం వంకరపోవడం, A - చేయి బలహీనత, S - మాట తడబడటం, T - వెంటనే 108 కు కాల్ చేయడం.\n"
+                "• **ప్రాథమిక అంచనా (Disease Prediction):** న్యూరోలాజికల్ స్ట్రోక్ రిస్క్ ప్రొఫైల్.\n"
+                "• **సిఫార్సు:** అత్యవసరమైతే వెంటనే ఆసుపత్రికి వెళ్ళండి. నివారణ అంచనా కోసం **Brain Stroke Predictor** ఉపయోగించండి."
+            )
+            doc = "న్యూరాలజిస్ట్ / అత్యవసర వైద్యులు"
+            rec = "లక్షణాలు ఉంటే వెంటనే సమీప స్ట్రోక్ సెంటర్ లేదా 108 ను సంప్రదించండి."
+        elif language == "hi":
+            reply = (
+                "🧠 **ब्रेन स्ट्रोक और न्यूरोलॉजिकल मूल्यांकन (Stroke Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** मस्तिष्क में रक्त संचार बाधित होने से स्ट्रोक होता है। इसमें हर मिनट महत्वपूर्ण होता है।\n"
+                "• **FAST नियम:** F - चेहरे का टेढ़ा होना, A - एक तरफ हाथ में कमजोरी, S - बोलने में लड़खड़ाहट, T - तुरंत 108 पर कॉल करना।\n"
+                "• **रोग भविष्यवाणी (Prediction):** सेरेब्रोवास्कुलर स्ट्रोक जोखिम।\n"
+                "• **सुझाव:** आपातकाल में तुरंत अस्पताल जाएं या हमारे **Brain Stroke Predictor** से जांच करें।"
+            )
+            doc = "न्यूरोलॉजिस्ट / आपातकालीन चिकित्सक"
+            rec = "यदि लक्षण तीव्र हैं, तो तुरंत 108 पर कॉल करें और मस्तिष्क का MRI/CT स्कैन करवाएं।"
+        else:
+            reply = (
+                "🧠 **Brain Stroke & Neurological Triage Overview:**\n\n"
+                "• **Condition Basics:** An ischemic stroke occurs when cerebral blood supply is interrupted, leading to rapid cellular hypoxia. Transient Ischemic Attacks (TIAs) serve as critical precursor warnings.\n"
+                "• **FAST Warning Signs:**\n"
+                "  - **F (Face):** Unilateral facial droop or numbness.\n"
+                "  - **A (Arms):** Sudden weakness or inability to raise one arm.\n"
+                "  - **S (Speech):** Slurred speech, difficulty finding words, or comprehension loss.\n"
+                "  - **T (Time):** Immediate emergency dispatch (Call 108 / 112).\n"
+                "• **Diagnostic Prediction:** Cerebrovascular / Ischemic Stroke Risk Profile.\n\n"
+                "💡 *QuantumMedAI Recommendation:* If acute, dial 108 immediately. For baseline risk evaluation, use our **Brain Stroke Predictor** calculator."
+            )
+            doc = "Neurologist / Emergency Physician"
+            rec = "Urgent Neuro-evaluation, Brain CT/MRI scan, and Carotid Doppler."
+
+        return {
+            "ai_reply": reply,
+            "is_emergency": any(w in t for w in ["sudden", "face droop", "slurred", "paralysis"]),
+            "matched_keywords": ["Neurological Markers", "Stroke FAST"],
+            "detected_diseases": ["Brain Stroke Risk Assessment"],
+            "risk_level": "High",
+            "doctor": doc,
+            "recommendation": rec
+        }
+
+    # 7. PCOS / PCOD & Women's Hormonal Health
+    if any(w in t for w in ["pcos", "pcod", "period", "menstrual", "ovarian", "cramps", "facial hair", "hirsutism", "irregular period", "పీసీఓఎస్", "పీసీఓడీ", "పీరియడ్స్", "माहवारी"]):
+        if language == "te":
+            reply = (
+                "🌸 **PCOS / PCOD మరియు హార్మోన్ల ఆరోగ్య విశ్లేషణ:**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** PCOS/PCOD అనేది హార్మోన్ల అసమతుల్యత (ఆండ్రోజెన్లు పెరగడం మరియు ఇన్సులిన్ రెసిస్టెన్స్) వల్ల వచ్చే రుగ్మత.\n"
+                "• **లక్షణాలు:** క్రమం తప్పిన పీరియడ్స్, మొటిమలు, ముఖంపై అవాంఛిత రోమాలు, బరువు పెరగడం, అండాశయంలో తిత్తులు.\n"
+                "• **ప్రాథమిక అంచనా (Disease Prediction):** ఎండోక్రైన్ PCOS / PCOD హార్మోనల్ ప్రొఫైల్.\n"
+                "• **సంరక్షణ:** తక్కువ గ్లైసెమిక్ (Low-GI) ఆహారం, రోజూ వ్యాయామం, ఒత్తిడి తగ్గించుకోవడం.\n"
+                "• **సిఫార్సు:** మా **🩺 Disease Predictors** లోని **PCOS & PCOD Predictors** ను ఉపయోగించండి."
+            )
+            doc = "గైనకాలజిస్ట్ / ఎండోక్రైనాలజిస్ట్"
+            rec = "పెల్విక్ అల్ట్రాసౌండ్ స్కాన్ మరియు హార్మోన్ ప్రొఫైల్ (FSH, LH, AMH, థైరాయిడ్) పరీక్షించండి."
+        elif language == "hi":
+            reply = (
+                "🌸 **PCOS / PCOD और हार्मोनल स्वास्थ्य मूल्यांकन:**\n\n"
+                "• **बुनियादी जानकारी (Basics):** पीसीओएस/पीसीओडी हार्मोनल असंतुलन और इंसुलिन प्रतिरोध के कारण होता है।\n"
+                "• **प्रमुख लक्षण:** अनियमित मासिक धर्म, चेहरे पर अनचाहे बाल (हिर्सुटिज़्म), मुंहासे, अचानक वजन बढ़ना।\n"
+                "• **रोग भविष्यवाणी (Prediction):** पॉलीसिस्टिक ओवरी सिंड्रोम (PCOS) प्रोफाइल।\n"
+                "• **घरेलू देखभाल:** कम चीनी व फाइबर युक्त भोजन लें, प्रतिदिन 30 मिनट योग या व्यायाम करें।\n"
+                "• **सुझाव:** सटीक जोखिम जानने के लिए हमारे **PCOS Predictor** का उपयोग करें।"
+            )
+            doc = "स्त्री रोग विशेषज्ञ (Gynecologist) / एंडोक्रिनोलॉजिस्ट"
+            rec = "पेल्विक अल्ट्रासाउंड और हार्मोनल प्रोफाइल (LH, FSH, Testosterone) करवाएं।"
+        else:
+            reply = (
+                "🌸 **PCOS / PCOD & Endocrine Health Overview:**\n\n"
+                "• **Condition Basics:** Polycystic Ovary Syndrome (PCOS) is a complex endocrine disorder characterized by hyperandrogenism, ovulatory dysfunction, and insulin resistance.\n"
+                "• **Key Symptoms:** Oligomenorrhea (irregular or absent periods), hirsutism (excess facial/body hair), persistent cystic acne, unexplained central adiposity, and pelvic aching.\n"
+                "• **Diagnostic Prediction:** Polycystic Ovarian Endocrine Risk Profile.\n"
+                "• **Supportive Lifestyle Actions:**\n"
+                "  - Adopt a low-glycemic index (Low-GI), anti-inflammatory diet.\n"
+                "  - Perform 30–45 minutes of strength and aerobic exercise 4–5 times weekly.\n"
+                "  - Optimize sleep patterns to regulate cortisol and insulin sensitivity.\n\n"
+                "💡 *QuantumMedAI Recommendation:* Check your personalized clinical indicators using our **PCOS & PCOD Predictors** in the Disease Predictors tab."
+            )
+            doc = "Gynecologist / Endocrinologist"
+            rec = "Schedule a Pelvic Ultrasound (USG) and comprehensive Hormone Profile (FSH, LH, DHEA-S, Total Testosterone, AMH)."
+
+        return {
+            "ai_reply": reply,
+            "is_emergency": False,
+            "matched_keywords": ["Endocrine Indicators", "PCOS / PCOD", "Menstrual Cycle"],
+            "detected_diseases": ["PCOS / PCOD Endocrine Risk Profile"],
+            "risk_level": "Moderate",
+            "doctor": doc,
+            "recommendation": rec
+        }
+
+    # 8. Diabetes, High Blood Sugar & Metabolic Health
+    if any(w in t for w in ["diabetes", "sugar", "glucose", "hba1c", "insulin", "thirst", "frequent urination", "డయాబెటిస్", "షుగర్", "మధుమేహం", "मधुमेह"]):
+        if language == "te":
+            reply = (
+                "🍬 **డయాబెటిస్ & రక్తంలో చక్కెర స్థాయిల విశ్లేషణ:**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** ఇన్సులిన్ సరిగ్గా పనిచేయకపోవడం వల్ల రక్తంలో గ్లూకోజ్ స్థాయిలు పెరుగుతాయి (టైప్-2 డయాబెటిస్).\n"
+                "• **లక్షణాలు:** ఎక్కువ దాహం వేయడం, తరచుగా మూత్రవిసర్జన, విపరీతమైన ఆకలి, గాయాలు త్వరగా మానకపోవడం, కంటిచూపు మందగించడం.\n"
+                "• **ప్రాథమిక అంచనా (Disease Prediction):** ప్రీ-డయాబెటిస్ లేదా డయాబెటిస్ మెల్లిటస్ ప్రొఫైల్.\n"
+                "• **సంరక్షణ:** తీపి పదార్థాలు మానేయండి, తృణధాన్యాలు తీసుకోండి, రోజూ నడవండి.\n"
+                "• **సిఫార్సు:** ఫాస్టింగ్ బ్లడ్ షుగర్ మరియు HbA1c పరీక్షలు చేయించుకోండి."
+            )
+            doc = "ఎండోక్రైనాలజిస్ట్ / డయాబెటాలజిస్ట్"
+            rec = "Fasting Blood Sugar (FBS), Post-Prandial (PPBS), మరియు HbA1c పరీక్షలు చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "🍬 **मधुमेह (Diabetes) और ब्लड शुगर मूल्यांकन:**\n\n"
+                "• **बुनियादी जानकारी (Basics):** शरीर में इंसुलिन का उत्पादन कम होने या इंसुलिन रेजिस्टेंस के कारण ब्लड शुगर बढ़ता है।\n"
+                "• **प्रमुख लक्षण:** अत्यधिक प्यास लगना, बार-बार पेशाब आना, थकान, घाव देर से भरना, धुंधला दिखना।\n"
+                "• **रोग भविष्यवाणी (Prediction):** संभावित प्रीडायबिटीज / टाइप-2 डायबिटीज।\n"
+                "• **घरेलू देखभाल:** मीठा और मैदा बंद करें, फाइबर युक्त आहार लें, नियमित व्यायाम करें।\n"
+                "• **सुझाव:** खाली पेट ब्लड शुगर और HbA1c टेस्ट करवाएं।"
+            )
+            doc = "एंडोक्रिनोलॉजिस्ट / डायबेटोलॉजिस्ट"
+            rec = "Fasting Blood Glucose और HbA1c टेस्ट करवाएं।"
+        else:
+            reply = (
+                "🍬 **Diabetes Mellitus & Glycemic Health Overview:**\n\n"
+                "• **Condition Basics:** Diabetes occurs when the pancreas produces insufficient insulin or peripheral tissues develop insulin resistance, leading to chronic hyperglycemia.\n"
+                "• **Key Symptoms:** Polydipsia (excessive thirst), polyuria (frequent urination), polyphagia (constant hunger), blurred vision, unexplained weight loss, and slow-healing wounds.\n"
+                "• **Diagnostic Prediction:** Pre-Diabetes / Type-2 Diabetes Glycemic Profile.\n"
+                "• **Supportive Lifestyle Actions:**\n"
+                "  - Limit simple carbohydrates, sugary drinks, and ultra-processed items.\n"
+                "  - Emphasize high-fiber vegetables, whole grains, and lean proteins.\n"
+                "  - Walk for 15 minutes after main meals to blunt post-prandial glycemic spikes.\n\n"
+                "💡 *QuantumMedAI Recommendation:* Check your metabolic indicators and BMI in our Disease Predictors suite."
+            )
+            doc = "Endocrinologist / Diabetologist"
+            rec = "Get Fasting Blood Sugar (FBS), Post-Prandial Blood Sugar (PPBS), and HbA1c testing."
+
+        return {
+            "ai_reply": reply,
+            "is_emergency": False,
+            "matched_keywords": ["Glycemic Biomarkers", "Diabetes", "HbA1c"],
+            "detected_diseases": ["Diabetes Mellitus / Glycemic Dysregulation"],
+            "risk_level": "Moderate",
+            "doctor": doc,
+            "recommendation": rec
+        }
+
+    # 9. Thyroid Disorders (Hypothyroidism / Hyperthyroidism)
+    if any(w in t for w in ["thyroid", "hypothyroid", "hyperthyroid", "tsh", "t3", "t4", "goiter", "థైరాయిడ్", "थायराइड"]):
         return {
             "ai_reply": (
-                "Gastrointestinal discomfort can stem from indigestion, acidity, food intolerance, or mild gastroenteritis.\n\n"
-                "• **Helpful Relief Steps:**\n"
-                "  - Avoid heavy, spicy, fried, or acidic foods; opt for light items like bananas, rice, or crackers (BRAT diet).\n"
-                "  - Drink small sips of water or Oral Rehydration Solution (ORS) to prevent dehydration.\n"
-                "  - Avoid lying down flat immediately after meals.\n\n"
-                "⚠️ *Seek urgent care if you experience severe localized abdominal pain, inability to keep liquids down, or high fever.*"
+                "🦋 **Thyroid Function & Endocrine Assessment:**\n\n"
+                "• **Condition Basics:** The thyroid gland regulates whole-body metabolism, thermogenesis, and heart rate through T3 and T4 hormones.\n"
+                "• **Hypothyroid Signs:** Weight gain despite normal appetite, extreme cold sensitivity, dry skin, constipation, and hair loss.\n"
+                "• **Hyperthyroid Signs:** Rapid heart rate, heat intolerance, tremor, unintended weight loss, and restlessness.\n"
+                "• **Diagnostic Prediction:** Thyroid Endocrine Dysfunction Profile.\n"
+                "• **Next Steps:** Obtain a comprehensive Serum Thyroid Panel (TSH, Free T3, Free T4) and consult an Endocrinologist."
             ),
             "is_emergency": False,
-            "matched_keywords": ["Gastrointestinal Discomfort"],
-            "detected_diseases": ["Gastric / Digestive Disturbance"],
-            "risk_level": "Moderate",
+            "matched_keywords": ["Thyroid Hormones", "TSH", "Endocrine"],
+            "detected_diseases": ["Thyroid Dysfunction Profile"],
+            "risk_level": "Low" if "mild" in t else "Moderate",
+            "doctor": "Endocrinologist",
+            "recommendation": "Check Serum TSH, Free T3, and Free T4 levels."
+        }
+
+    # 10. Respiratory, Asthma & Chronic Cough
+    if any(w in t for w in ["asthma", "wheezing", "cough", "bronchitis", "pneumonia", "breath", "dammam", "ఆయాసం", "దగ్గు", "खांसी", "दमा"]):
+        return {
+            "ai_reply": (
+                "🫁 **Respiratory & Pulmonary Health Assessment:**\n\n"
+                "• **Condition Basics:** Respiratory tract symptoms stem from airway inflammation, bronchospasm (asthma), or viral/bacterial infections (bronchitis/pneumonia).\n"
+                "• **Key Symptoms:** Wheezing sound while breathing out, persistent dry or productive cough, chest tightness, and shortness of breath during exertion.\n"
+                "• **Diagnostic Prediction:** Bronchial Asthma / Respiratory Infection Profile.\n"
+                "• **Supportive Actions:**\n"
+                "  - Practice steam inhalation twice daily and stay in well-ventilated environments.\n"
+                "  - Avoid allergen triggers (dust, smoke, cold air, pet dander).\n"
+                "  - Use prescribed inhalers as directed by your physician.\n\n"
+                "⚠️ *Warning: Seek emergency care immediately if you experience severe shortness of breath or blue lips.*"
+            ),
+            "is_emergency": "severe breath" in t or "can't breathe" in t,
+            "matched_keywords": ["Pulmonary Airway", "Wheezing", "Cough"],
+            "detected_diseases": ["Bronchial Asthma / Pulmonary Condition"],
+            "risk_level": "High" if "severe" in t else "Moderate",
+            "doctor": "Pulmonologist / Chest Physician",
+            "recommendation": "Consult a Pulmonologist for Spirometry (Pulmonary Function Test) and Chest X-ray."
+        }
+
+    # 11. Infectious Tropical Fevers: Dengue, Malaria, Typhoid
+    if any(w in t for w in ["dengue", "malaria", "typhoid", "chills", "platelet", "డెంగ్యూ", "మలేరియా", "టైఫాయిడ్", "डेंगू", "मलेरिया"]):
+        return {
+            "ai_reply": (
+                "🦟 **Tropical & Infectious Fever Assessment:**\n\n"
+                "• **Condition Basics:** Vector-borne and bacterial infections (Dengue, Malaria, Typhoid) cause acute systemic inflammation, high fever, and hematological shifts (platelet drops).\n"
+                "• **Key Symptoms:** Sudden high-grade fever with shaking chills, severe retro-orbital (behind eyes) pain, joint/muscle aches, and rash.\n"
+                "• **Diagnostic Prediction:** Tropical Infection / Dengue / Malaria Evaluation.\n"
+                "• **Supportive Home Care:**\n"
+                "  - Maintain aggressive oral hydration (ORS, coconut water, soups).\n"
+                "  - Avoid aspirin and ibuprofen which can increase bleeding risk.\n"
+                "  - Get a Complete Blood Count (CBC) to monitor platelet counts every 24 hours."
+            ),
+            "is_emergency": "bleeding" in t or "low platelet" in t,
+            "matched_keywords": ["Tropical Fever", "Platelets", "Infection"],
+            "detected_diseases": ["Dengue / Malaria / Typhoid Fever Profile"],
+            "risk_level": "High",
+            "doctor": "General Physician / Infectious Disease Specialist",
+            "recommendation": "Get CBC (Complete Blood Picture), Dengue NS1/IgM, and Malaria Rapid Test immediately."
+        }
+
+    # 12. Gastrointestinal & Acid Reflux / Ulcers
+    if any(w in t for w in ["acidity", "acid reflux", "gerd", "heartburn", "ulcer", "gastritis", "stomach pain", "nausea", "vomit", "కడుపు నొప్పి", "ఎసిడిటీ", "गैस", "पेट दर्द"]):
+        return {
+            "ai_reply": (
+                "🍽️ **Gastrointestinal & Digestive Health Overview:**\n\n"
+                "• **Condition Basics:** Acidity, GERD, and gastritis occur when stomach acid irritates the esophageal lining or gastric mucosa due to delayed emptying, diet, or H. pylori.\n"
+                "• **Key Symptoms:** Burning sensation in chest/upper abdomen, acid regurgitation, bloating, nausea, and discomfort after meals.\n"
+                "• **Supportive Home Care:**\n"
+                "  - Eat smaller, frequent meals and avoid lying down for 2 hours post-meal.\n"
+                "  - Eliminate spicy, oily, caffeinated, and deeply acidic foods.\n"
+                "  - Sip warm chamomile or ginger water for soothing digestion."
+            ),
+            "is_emergency": False,
+            "matched_keywords": ["Gastrointestinal", "Acid Reflux", "Gastritis"],
+            "detected_diseases": ["GERD / Gastritis / Peptic Discomfort"],
+            "risk_level": "Low" if "mild" in t else "Moderate",
             "doctor": "Gastroenterologist / General Physician",
-            "recommendation": "Eat light bland foods, hydrate with ORS, and consult a doctor if severe pain or vomiting persists."
+            "recommendation": "Adopt bland diet, avoid lying flat after meals, and consult a doctor if pain persists."
         }
 
-    # 7. Heart & Cardiovascular Signs
-    if any(w in t for w in ["palpitation", "irregular heartbeat", "high blood pressure", "cholesterol", "pulse", "hypertension"]):
+    # 13. Orthopedic, Arthritis & Joint Pain
+    if any(w in t for w in ["joint pain", "arthritis", "knee pain", "uric acid", "gout", "back pain", "నొప్పులు", "కీళ్ల నొప్పులు", "जोड़ों का दर्द", "गठिया"]):
         return {
             "ai_reply": (
-                "Cardiovascular indicators require careful monitoring.\n\n"
-                "• **Key Considerations:**\n"
-                "  - Check and log your resting blood pressure and pulse rate.\n"
-                "  - Minimize caffeine, sodium, and high-stress triggers.\n"
-                "  - Practice slow deep breathing.\n\n"
-                "We recommend visiting our **🩺 Disease Predictors** tab to run the full Heart Disease Risk Assessment, or scheduling an appointment with a Cardiologist."
+                "🦴 **Joint Health, Arthritis & Musculoskeletal Assessment:**\n\n"
+                "• **Condition Basics:** Joint pain and stiffness often indicate Osteoarthritis (cartilage wear), Rheumatoid Arthritis (autoimmune inflammation), or Gout (uric acid crystals).\n"
+                "• **Key Symptoms:** Joint swelling, morning stiffness lasting >30 minutes, cracking sounds, and restricted mobility.\n"
+                "• **Supportive Home Care:**\n"
+                "  - Apply warm compresses for chronic stiffness or cold packs for acute swelling.\n"
+                "  - Low-impact exercises like swimming and gentle stretching.\n"
+                "  - Restrict high-purine foods (red meat, seafood) if uric acid is elevated."
             ),
             "is_emergency": False,
-            "matched_keywords": ["Cardiovascular Markers"],
-            "detected_diseases": ["Cardiovascular Evaluation Profile"],
-            "risk_level": "Moderate",
-            "doctor": "Cardiologist",
-            "recommendation": "Log BP readings, avoid excessive stimulants, and run the precision Heart Disease Calculator."
+            "matched_keywords": ["Musculoskeletal", "Joint Pain", "Uric Acid"],
+            "detected_diseases": ["Arthritis / Musculoskeletal Evaluation"],
+            "risk_level": "Low" if "mild" in t else "Moderate",
+            "doctor": "Orthopedic Specialist / Rheumatologist",
+            "recommendation": "Check Serum Uric Acid, ESR, CRP, and X-ray of affected joints."
         }
 
-    # 8. PCOS / PCOD / Women's Hormonal Health
-    if any(w in t for w in ["pcos", "pcod", "period", "menstrual", "ovarian", "cramps", "hormone", "facial hair", "acne"]):
+    # 14. Anemia & Blood Deficiency
+    if any(w in t for w in ["anemia", "hemoglobin", "low hb", "pale", "dizzy", "fatigue", "రక్తహీనత", "ఎనీమియా", "खून की कमी"]):
         return {
             "ai_reply": (
-                "Hormonal and menstrual patterns are important indicators of reproductive and endocrine health.\n\n"
-                "• **Recommendations:**\n"
-                "  - Maintain a balanced low-glycemic diet rich in whole foods and fiber.\n"
-                "  - Engage in regular moderate physical activity.\n"
-                "  - Track your cycle dates and any related symptoms (weight shifts, skin changes).\n\n"
-                "You can use the **PCOS / PCOD Assessment** in our Disease Predictors tab for a detailed risk analysis, and consult a Gynecologist for ultrasound or hormone profiles."
+                "🩸 **Hematological & Anemia Assessment:**\n\n"
+                "• **Condition Basics:** Anemia occurs when blood lacks sufficient healthy red blood cells or hemoglobin to carry adequate oxygen throughout tissues.\n"
+                "• **Key Symptoms:** Chronic fatigue, pale skin, dizziness upon standing, cold hands and feet, and brittle nails.\n"
+                "• **Supportive Actions:** Increase iron-rich foods (spinach, beetroot, lentils, dates, pomegranate) alongside Vitamin C to enhance absorption."
             ),
             "is_emergency": False,
-            "matched_keywords": ["Endocrine / Gynecological Indicators"],
-            "detected_diseases": ["PCOS / PCOD Hormonal Profile"],
+            "matched_keywords": ["Hematological", "Hemoglobin", "Iron Deficiency"],
+            "detected_diseases": ["Iron Deficiency Anemia Profile"],
             "risk_level": "Moderate",
-            "doctor": "Gynecologist / Endocrinologist",
-            "recommendation": "Track menstrual cycles, adopt low-GI nutrition, and consult a Gynecologist for hormonal testing."
+            "doctor": "Hematologist / General Physician",
+            "recommendation": "Get Complete Blood Picture (CBP), Serum Ferritin, and Iron profile."
         }
 
-    # Default General Consultation
+    # 15. General Multi-Symptom Pattern Matching Engine
+    # For any general question or symptom description not explicitly matching above
+    found_symptoms = []
+    for sym, category in [
+        ("fever", "Febrile Illness"), ("headache", "Cranial Discomfort"), ("pain", "Somatic Discomfort"),
+        ("vomit", "Gastric Distress"), ("swelling", "Edema / Inflammation"), ("fatigue", "Systemic Fatigue"),
+        ("rash", "Dermatological"), ("dizzy", "Equilibrium Shift"), ("cough", "Respiratory"),
+        ("weakness", "Malaise"), ("infection", "Infectious Pathology"), ("sweat", "Autonomic Signs")
+    ]:
+        if sym in t:
+            found_symptoms.append(category)
+
+    if not found_symptoms:
+        found_symptoms = ["Clinical Inquiry"]
+
+    if language == "te":
+        reply = (
+            f"🩺 **వైద్య విశ్లేషణ మరియు ప్రాథమిక అంచనా (Clinical Assessment):**\n\n"
+            f"మీరు వివరించిన లక్షణాలు: **{text}**\n\n"
+            "• **ప్రాథమిక సమాచారం (Basics):** ఈ రకమైన లక్షణాలు శరీరంలో తాపజనక ప్రతిస్పందన, రోగనిరోధక చర్య లేదా జీవక్రియల అసమతుల్యత వల్ల సంభవించవచ్చు.\n"
+            "• **ప్రాథమిక అంచనా (Disease Prediction):** ప్రాథమిక క్లినికల్ ప్రొఫైల్ - క్రమం తప్పకుండా పర్యవేక్షించవలసిన పరిస్థితి.\n"
+            "• **స్వీయ సంరక్షణ సలహాలు:**\n"
+            "  - పుష్కలంగా నీరు మరియు ద్రవపదార్థాలు తీసుకోండి.\n"
+            "  - శరీరానికి తగినంత విశ్రాంతి ఇవ్వండి.\n"
+            "  - శరీర ఉష్ణోగ్రత మరియు రక్తపోటును గమనించండి.\n\n"
+            "• **ముఖ్య సూచన:** సమస్య కొనసాగితే లేదా తీవ్రమైతే వెంటనే వైద్యుడిని సంప్రదించండి. మా **🩺 Disease Predictors** ట్యాబ్‌లోని కాలిక్యులేటర్లను కూడా ఉపయోగించవచ్చు."
+        )
+        doc = "జనరల్ ఫిజీషియన్ (సాధారణ వైద్యులు)"
+        rec = "తగినంత విశ్రాంతి తీసుకోండి, పుష్కలంగా నీరు త్రాగండి మరియు వైద్యుడిని సంప్రదించండి."
+    elif language == "hi":
+        reply = (
+            f"🩺 **चिकित्सीय मूल्यांकन एवं रोग भविष्यवाणी (Clinical Assessment):**\n\n"
+            f"आपके द्वारा बताए गए लक्षण: **{text}**\n\n"
+            "• **बुनियादी जानकारी (Basics):** इस प्रकार के लक्षण संक्रमण, सूजन या चयापचय में बदलाव के कारण हो सकते हैं।\n"
+            "• **रोग भविष्यवाणी (Prediction):** प्राथमिक स्वास्थ्य मूल्यांकन प्रोफ़ाइल।\n"
+            "• **प्राथमिक देखभाल:**\n"
+            "  - पर्याप्त मात्रा में पानी और तरल पदार्थ पिएं।\n"
+            "  - भरपूर आराम करें।\n"
+            "  - शरीर के तापमान और लक्षणों पर नज़र रखें।\n\n"
+            "• **सुझाव:** यदि लक्षण 24-48 घंटों से अधिक बने रहते हैं, तो डॉक्टर से सलाह लें या हमारे **Disease Predictors** का उपयोग करें।"
+        )
+        doc = "सामान्य चिकित्सक (General Physician)"
+        rec = "आराम करें, पानी पिएं और सामान्य चिकित्सक से परामर्श लें।"
+    else:
+        reply = (
+            f"🩺 **Clinical Evaluation & Disease Prediction Overview:**\n\n"
+            f"**Reported Concern / Symptoms:** \"{text}\"\n\n"
+            "• **Clinical Basics:** The symptom cluster you described typically reflects an inflammatory response, physiological metabolic shift, or localized bodily strain.\n"
+            "• **Preliminary Diagnostic Prediction:** General Medical Evaluation Profile.\n"
+            "• **Recommended Clinical Workup:** Complete Blood Count (CBC), Basic Metabolic Panel, and vitals monitoring.\n"
+            "• **Supportive Home Care:**\n"
+            "  - Maintain optimal hydration with water and electrolyte broths.\n"
+            "  - Ensure 7–8 hours of restful sleep and avoid physical overexertion.\n"
+            "  - Monitor any changes in temperature, pain intensity, or respiration.\n\n"
+            "💡 *QuantumMedAI Recommendation:* You can run dedicated precision assessments in our **🩺 Disease Predictors** tab (Heart, Kidney, Liver, Stroke, PCOS, BMI) or consult a General Physician."
+        )
+        doc = "General Physician"
+        rec = "Hydrate, rest, monitor symptoms, and consult a General Physician for clinical evaluation."
+
     return {
-        "ai_reply": (
-            f"Thank you for sharing your concern: \"{text}\".\n\n"
-            "To provide the most accurate medical advice, please let me know:\n"
-            "• How long have you had this concern?\n"
-            "• Are there any other symptoms you are noticing (pain, fever, fatigue, nausea)?\n\n"
-            "In the meantime, prioritize adequate rest and hydration. You can also explore our **🩺 Disease Predictors** tab for specific condition evaluations."
-        ),
+        "ai_reply": reply,
         "is_emergency": False,
-        "matched_keywords": ["Patient Query"],
-        "detected_diseases": ["General Health Inquiry"],
-        "risk_level": "Low",
-        "doctor": "General Physician",
-        "recommendation": "Provide additional symptom details or consult a General Physician for clinical evaluation."
+        "matched_keywords": found_symptoms,
+        "detected_diseases": ["Clinical Symptom Assessment Profile"],
+        "risk_level": "Low" if "mild" in t else "Moderate",
+        "doctor": doc,
+        "recommendation": rec
     }
+
 
 
 @router.get("/status")
