@@ -44,15 +44,15 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
     
     if is_greeting:
         if language == "te":
-            reply = "నమస్కారం! నేను మీ క్వాంటమ్‌మెడ్ AI వైద్య సహాయకుడిని. నేను మీకు ఎలా సహాయపడగలను? మీరు మీ లక్షణాలను వివరించవచ్చు (ఉదాహరణకు: జ్వరం, గుండె సమస్యలు, కిడ్నీ, కాలేయం, డయాబెటిస్, థైరాయిడ్, PCOS మొదలైనవి), లేదా ప్రిస్క్రిప్షన్/ల్యాబ్ రిపోర్టులను అప్‌లోడ్ చేయవచ్చు."
+            reply = "నమస్కారం! నేను మీ డాక్టర్ క్వాంటమ్, క్వాంటమ్‌మెడ్ AI వైద్య సహాయకుడిని. నేను మీకు ఎలా సహాయపడగలను? మీరు మీ లక్షణాలను వివరించవచ్చు (ఉదా: చర్మ అలర్జీలు, జ్వరం, గుండె సమస్యలు, కిడ్నీ, కాలేయం, డయాబెటిస్, థైరాయిడ్, PCOS మొదలైనవి), లేదా ప్రిస్క్రిప్షన్/ల్యాబ్ రిపోర్టులను అప్‌లోడ్ చేయవచ్చు."
             doc = "జనరల్ ఫిజీషియన్ (సాధారణ వైద్యులు)"
             rec = "మీరు ఎదుర్కొంటున్న లక్షణాలను లేదా ఆరోగ్య సమస్యలను వివరించండి."
         elif language == "hi":
-            reply = "नमस्ते! मैं आपका क्वांटममेड AI चिकित्सा सहायक हूँ। मैं आपकी क्या मदद कर सकता हूँ? आप अपने लक्षणों का वर्णन कर सकते हैं (जैसे: बुखार, हृदय रोग, किडनी, लिवर, मधुमेह, थायराइड, पीसीओएस आदि) या लैब रिपोर्ट/पर्चे अपलोड कर सकते हैं।"
+            reply = "नमस्ते! मैं आपका डॉ. क्वांटम, क्वांटममेड AI चिकित्सा सहायक हूँ। मैं आपकी क्या मदद कर सकता हूँ? आप अपने लक्षणों का वर्णन कर सकते हैं (जैसे: त्वचा की एलर्जी, बुखार, हृदय रोग, किडनी, लिवर, मधुमेह, थायराइड आदि) या लैब रिपोर्ट/पर्चे अपलोड कर सकते हैं।"
             doc = "सामान्य चिकित्सक (General Physician)"
             rec = "कृपया अपने लक्षणों या स्वास्थ्य संबंधी प्रश्नों को साझा करें।"
         else:
-            reply = "Hello! I am Dr. Quantum, your clinical AI physician assistant at QuantumMedAI. How can I assist you today? You can describe any symptoms (e.g. fever, chest heaviness, kidney pain, liver issues, diabetes, PCOS, stroke risk, etc.), ask for disease predictions, or upload a prescription/lab report."
+            reply = "Hello! I am Dr. Quantum, your clinical AI physician assistant at QuantumMedAI. How can I assist you today? You can describe any symptoms (e.g. skin allergies, hand rashes, fever, heart issues, kidney pain, diabetes, PCOS, etc.), ask for condition predictions, or upload a prescription/lab report."
             doc = "General Physician"
             rec = "Feel free to describe your symptoms, ask about any health condition, or use our dedicated Disease Predictor calculators."
 
@@ -106,7 +106,155 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "recommendation": rec
             }
 
-    # 3. Heart Disease, Hypertension & Cardiovascular Risk
+    # 3. Childhood-Onset / Lifelong / Chronic Conditions (e.g. "from my childhood what it can be", "since childhood")
+    if any(w in t for w in ["childhood", "from childhood", "from my childhood", "since childhood", "since birth", "born with", "since i was a kid", "since a child", "lifelong", "long standing", "చిన్నప్పటి నుండి", "బాల్యం", "बचपन से"]):
+        if language == "te":
+            reply = (
+                "👶 **చిన్నప్పటి నుండి ఉన్న దీర్ఘకాలిక సమస్యల విశ్లేషణ (Childhood / Chronic Assessment):**\n\n"
+                "చిన్నప్పటి నుండి వచ్చే లక్షణాలు (ముఖ్యంగా చర్మం, చేతులు లేదా శ్వాసకోశ సమస్యలు) తరచుగా జన్యుపరమైన లేదా దీర్ఘకాలిక అటోపిక్ లక్షణాలను సూచిస్తాయి.\n\n"
+                "• **సాధ్యమైన పరిస్థితులు (Differential Diagnosis):**\n"
+                "  1. **అటోపిక్ డెర్మటైటిస్ / ఎగ్జిమా (Atopic Dermatitis):** చిన్నతనం నుండే మొదలై చేతులు, ముఖం లేదా చర్మంపై పొడిబారడం, దురద మరియు దద్దుర్లు కలిగించే అత్యంత సాధారణ చర్మ సమస్య.\n"
+                "  2. **కాంటాక్ట్ లేదా ఎన్విరాన్‌మెంటల్ అలర్జీ:** సబ్బులు, నీరు, రసాయనాలు లేదా వాతావరణం పట్ల చర్మ సున్నితత్వం.\n"
+                "  3. **ఇచ్థియోసిస్ లేదా కెరాటోసిస్ పిలారిస్ (Ichthyosis / Keratosis):** చర్మం పొడిగా, గరుకుగా ఉండే పుట్టుకతో వచ్చే చర్మ రకం.\n\n"
+                "• **సంరక్షణ సూచనలు:**\n"
+                "  - సువాసన లేని మాయిశ్చరైజర్లు (Ceramide creams / Vaseline) ప్రతిరోజూ వాడండి.\n"
+                "  - కఠినమైన సబ్బులు, డిటర్జెంట్లు మరియు వేడినీటికి దూరంగా ఉండండి.\n"
+                "  - ఖచ్చితమైన కారణాన్ని తెలుసుకోవడానికి **డెర్మటాలజిస్ట్ (చర్మ నిపుణులు)** ను సంప్రదించండి."
+            )
+            doc = "డెర్మటాలజిస్ట్ / అలెర్జాలజిస్ట్ (Dermatologist / Allergist)"
+            rec = "స్కిన్ ప్యాచ్ టెస్ట్ (Patch Test) మరియు డెర్మటాలజిస్ట్ పరీక్ష చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "👶 **बचपन से चली आ रही पुरानी समस्याओं का मूल्यांकन (Childhood / Chronic Assessment):**\n\n"
+                "बचपन से होने वाले लक्षण (विशेष रूप से हाथों, त्वचा या सांस से जुड़े) अक्सर आनुवंशिक या लंबे समय से चली आ रही एलर्जी की ओर इशारा करते हैं।\n\n"
+                "• **संभावित रोग व स्थितियां (Possible Causes):**\n"
+                "  1. **एटॉपिक डर्मेटाइटिस / एक्जिमा (Atopic Eczema):** बचपन से त्वचा पर सूखापन, खुजली और पपड़ी बनने का सबसे आम कारण।\n"
+                "  2. **क्रॉनिक कॉन्टैक्ट एलर्जी:** साबुन, डिटर्जेंट, धूल या रसायनों के प्रति त्वचा की अति-संवेदनशीलता।\n"
+                "  3. **इचिथियोसिस या केराटोसिस पिलारिस:** त्वचा की प्राकृतिक नमी की कमी से होने वाला आनुवंशिक सूखापन।\n\n"
+                "• **घरेलू देखभाल व सुझाव:**\n"
+                "  - हाथ धोने के तुरंत बाद गाढ़ा मॉइस्चराइज़र (Ceramide cream / Petroleum jelly) लगाएं।\n"
+                "  - अत्यधिक गर्म पानी और कठोर साबुनों से बचें।\n"
+                "  - सटीक पहचान के लिए **त्वचा रोग विशेषज्ञ (Dermatologist)** से परामर्श लें।"
+            )
+            doc = "डर्मेटोलॉजिस्ट / त्वचा रोग विशेषज्ञ"
+            rec = "स्किन पैच टेस्ट और डर्मेटोलॉजिस्ट से मूल्यांकन करवाएं।"
+        else:
+            reply = (
+                "👶 **Clinical Evaluation: Chronic / Childhood-Onset Symptoms**\n\n"
+                "When a symptom or allergy has been present continuously or intermittently **since childhood**, it strongly points to a chronic atopic, genetic, or barrier-related predisposition.\n\n"
+                "### 🔍 Primary Diagnostic Considerations:\n"
+                "1. **Atopic Dermatitis (Childhood / Hand Eczema):**\n"
+                "   - The most common cause of lifelong skin sensitivity. It stems from an inherent skin barrier deficiency (such as filaggrin gene mutations) combined with an overactive immune response, leading to chronic dryness, itching, and flare-ups on the hands or joints.\n"
+                "2. **Chronic Contact Dermatitis / Hypersensitivity:**\n"
+                "   - Lifelong reactivity to common household irritants (harsh soaps, detergents, nickel metals, latex, or cold/dry weather).\n"
+                "3. **Dyshidrotic Eczema (Pompholyx):**\n"
+                "   - Recurrent clusters of tiny, intensely itchy deep-seated blisters along the palms and edges of fingers.\n"
+                "4. **Congenital Xerosis / Ichthyosis Vulgaris:**\n"
+                "   - A genetic skin moisture retention condition that presents from early youth with rough, scaling skin.\n\n"
+                "### 💡 Recommended Management & Home Care:\n"
+                "- **Barrier Restoration:** Apply a thick, fragrance-free ceramide cream or pure petroleum jelly immediately after washing hands while skin is slightly damp.\n"
+                "- **Gentle Cleansing:** Use soap-free, pH-balanced liquid cleansers instead of harsh bar soaps.\n"
+                "- **Protection:** Wear soft cotton-lined nitrile gloves when cleaning, washing dishes, or handling chemicals.\n"
+                "- **Symptom Relief:** Over-the-counter 1% hydrocortisone ointment or oral antihistamines can alleviate active itching flares.\n\n"
+                "### 👨‍⚕️ Specialist Referral:\n"
+                "Consult a **Dermatologist** or **Allergist** for a **Skin Patch Test** to identify any specific lifelong allergen triggers."
+            )
+            doc = "Dermatologist / Allergist"
+            rec = "Consult a Dermatologist for a clinical skin examination and Allergy Patch Testing."
+
+        return {
+            "ai_reply": reply,
+            "is_emergency": False,
+            "matched_keywords": ["Childhood Onset", "Chronic Allergy", "Atopic Profile"],
+            "detected_diseases": ["Chronic Atopic Dermatitis / Childhood Allergy Profile"],
+            "risk_level": "Low" if "mild" in t else "Moderate",
+            "doctor": doc,
+            "recommendation": rec
+        }
+
+    # 4. Dermatology, Skin Allergies, Hand Rashes, Eczema, Psoriasis & Itching
+    if any(w in t for w in ["allergy", "hand", "hands", "skin", "eczema", "atopic", "dermatitis", "itching", "itch", "rash", "rashes", "hives", "urticaria", "blister", "peeling", "psoriasis", "dry skin", "fungal", "ringworm", "tinea", "scabies", "vitiligo", "boil", "acne", "చర్మ", "దురద", "ఎల్అలర్జీ", "అలర్జీ", "చేతి", "చేతులు", "దద్దుర్లు", "एलर्जी", "खुजली", "त्वचा", "दाद"]):
+        if language == "te":
+            reply = (
+                "🧴 **చర్మ & చేతుల అలర్జీ విశ్లేషణ (Dermatology & Skin Allergy):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** చేతులు మరియు చర్మంపై వచ్చే అలర్జీలు తరచుగా కాంటాక్ట్ డెర్మటైటిస్, ఎగ్జిమా (Eczema), లేదా ఫంగల్ ఇన్ఫెక్షన్ల వల్ల కలుగుతాయి.\n"
+                "• **ముఖ్యమైన కారణాలు:** సబ్బులు, డిటర్జెంట్లు, రసాయనాలు, వాతావరణ మార్పులు, లేదా రోగనిరోధక వ్యవస్థ ప్రతిస్పందన.\n"
+                "• **ప్రాథమిక అంచనా (Disease Prediction):** అటోపిక్ డెర్మటైటిస్ / కాంటాక్ట్ ఎగ్జిమా ప్రొఫైల్.\n"
+                "• **స్వీయ సంరక్షణ సూచనలు:**\n"
+                "  - గోరువెచ్చని నీటితో కడగండి, కఠినమైన సబ్బులను వాడకండి.\n"
+                "  - రోజుకు 2-3 సార్లు సెరమైడ్ మాయిశ్చరైజర్ లేదా కొబ్బరి నూనె రాయండి.\n"
+                "  - దురద తగ్గడానికి యాంటీహిస్టామైన్ మందులు లేదా మైల్డ్ హైడ్రోకార్టిసోన్ క్రీమ్ సహాయపడతాయి.\n"
+                "• **సిఫార్సు:** సమస్య తగ్గకపోతే **డెర్మటాలజిస్ట్ (చర్మ నిపుణులు)** ను సంప్రదించండి."
+            )
+            doc = "డెర్మటాలజిస్ట్ (Dermatologist)"
+            rec = "మాయిశ్చరైజర్ క్రమం తప్పకుండా రాయండి మరియు డెర్మటాలజిస్ట్‌ను సంప్రదించండి."
+        elif language == "hi":
+            reply = (
+                "🧴 **त्वचा एवं हाथों की एलर्जी मूल्यांकन (Dermatology & Skin Allergy):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** हाथों और त्वचा पर एलर्जी आमतौर पर कॉन्टैक्ट डर्मेटाइटिस, एक्जिमा (Eczema) या फंगल इन्फेक्शन के कारण होती है।\n"
+                "• **प्रमुख लक्षण:** त्वचा पर लालिमा, अत्यधिक खुजली, सूखापन, छोटे दाने या त्वचा का छिलना।\n"
+                "• **रोग भविष्यवाणी (Prediction):** संभावित हैंड एक्जिमा / एलर्जिक डर्मेटाइटिस।\n"
+                "• **घरेलू देखभाल:**\n"
+                "  - हल्के खुशबूरहित मॉइस्चराइज़र का नियमित उपयोग करें।\n"
+                "  - डिटर्जेंट या केमिकल का उपयोग करते समय दस्ताने पहनें।\n"
+                "  - खुजली के लिए एंटीहिस्टामाइन और माइल्ड हाइड्रोकार्टिसोन क्रीम सहायक होती है।\n"
+                "• **सुझाव:** स्थायी समाधान के लिए **त्वचा रोग विशेषज्ञ (Dermatologist)** से मिलें।"
+            )
+            doc = "डर्मेटोलॉजिस्ट (त्वचा रोग विशेषज्ञ)"
+            rec = "नियमित मॉइस्चराइज़र लगाएं और डर्मेटोलॉजिस्ट से जांच करवाएं।"
+        else:
+            reply = (
+                "🧴 **Dermatological & Skin Allergy Assessment:**\n\n"
+                "### 🔍 Clinical Overview & Likely Causes:\n"
+                "Skin reactions and hand allergies typically fall into one of the following primary dermatological categories:\n"
+                "1. **Contact Dermatitis (Allergic or Irritant):** Caused by direct contact with soaps, detergents, cleaning solvents, nickel jewelry, or latex.\n"
+                "2. **Hand Eczema (Atopic / Dyshidrotic Dermatitis):** Chronic inflammation leading to dryness, cracking, intense pruritus (itching), or small fluid-filled vesicles.\n"
+                "3. **Urticaria (Hives):** Raised, itchy wheals triggered by histamine release from foods, medications, or environmental contact.\n"
+                "4. **Fungal / Tinea Infection:** Circular or spreading scaling with raised borders, common in humid environments.\n\n"
+                "### 💡 Supportive Home Care & Relief Steps:\n"
+                "- **Frequent Emollient Application:** Apply thick, fragrance-free ceramide ointments or petroleum jelly immediately after hand-washing.\n"
+                "- **Barrier Protection:** Use cotton-lined gloves during household cleaning and washing chores.\n"
+                "- **Avoid Scratching:** Scratching damages the epidermal barrier and increases the risk of secondary bacterial infections.\n"
+                "- **Symptom Relief:** Over-the-counter 1% hydrocortisone cream and oral non-drowsy antihistamines (e.g. Cetirizine) can soothe acute flares.\n\n"
+                "### 👨‍⚕️ Specialist Referral:\n"
+                "If the allergy is persistent, spreading, or oozing, schedule a consultation with a **Dermatologist** for clinical evaluation and targeted topical therapy."
+            )
+            doc = "Dermatologist"
+            rec = "Apply thick barrier creams, avoid harsh detergents, and consult a Dermatologist."
+
+        return {
+            "ai_reply": reply,
+            "is_emergency": False,
+            "matched_keywords": ["Dermatology", "Skin Allergy", "Hand Rash", "Eczema"],
+            "detected_diseases": ["Allergic Dermatitis / Hand Eczema Evaluation"],
+            "risk_level": "Low" if "mild" in t else "Moderate",
+            "doctor": doc,
+            "recommendation": rec
+        }
+
+    # 5. Conversational Follow-up Questions (e.g. "what to do", "how to cure it", "what medicine", "is it curable")
+    if any(w in t for w in ["what to do", "how to cure", "how to treat", "what medicine", "which medicine", "can it be cured", "is it curable", "how long", "what should i do", "remedy", "ointment", "cream", "ఏం చేయాలి", "ఎలా తగ్గించుకోవాలి", "क्या करें", "इलाज"]):
+        return {
+            "ai_reply": (
+                "🩺 **Treatment & Clinical Management Guidance:**\n\n"
+                "### 💡 Recommended Step-by-Step Approach:\n"
+                "1. **Identify & Eliminate Triggers:** Pay attention to substances that worsen the symptoms (fragrances, specific foods, harsh soaps, dust, stress).\n"
+                "2. **Restore the Body's Natural Barrier:** For skin concerns, consistent use of rich emollients (Ceramides/Vaseline) is foundational. For internal issues, hydration and balanced nutrition are key.\n"
+                "3. **First-Line Symptomatic Relief:**\n"
+                "   - *For Allergies/Itching:* Non-sedating oral antihistamines (e.g. Cetirizine 10mg) and mild topical hydrocortisone 1%.\n"
+                "   - *For Inflammation/Pain:* Warm/cold compresses and rest.\n"
+                "4. **When to Seek Prescription Care:** If symptoms persist beyond 5–7 days, cause severe discomfort, or show signs of infection (pus, warmth, severe pain).\n\n"
+                "👨‍⚕️ **Next Step:** Consult the relevant specialist doctor for an in-person diagnostic workup and tailored prescription."
+            ),
+            "is_emergency": False,
+            "matched_keywords": ["Treatment Inquiry", "Clinical Management"],
+            "detected_diseases": ["Therapeutic Management Guidance"],
+            "risk_level": "Low",
+            "doctor": "General Physician / Specialist",
+            "recommendation": "Follow supportive home care and consult a specialist for personalized prescription therapy."
+        }
+
+    # 6. Heart Disease, Hypertension & Cardiovascular Risk
     if any(w in t for w in ["heart", "cardiac", "cardiovascular", "cholesterol", "blood pressure", "hypertension", "palpitation", "arrhythmia", "angina", "coronary", "గుండె", "హై బీపీ", "హృదయ", "कोलेस्ट्रॉल"]):
         if language == "te":
             reply = (
@@ -155,7 +303,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": rec
         }
 
-    # 4. Kidney Disease, Chronic Kidney Disease (CKD) & Kidney Stones
+    # 7. Kidney Disease, Chronic Kidney Disease (CKD) & Kidney Stones
     if any(w in t for w in ["kidney", "renal", "creatinine", "kidney stone", "proteinuria", "urea", "gfr", "కిడ్నీ", "మూత్రపిండ", "गुर्दा", "किडनी"]):
         if language == "te":
             reply = (
@@ -204,7 +352,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": rec
         }
 
-    # 5. Liver Disease, Fatty Liver, Jaundice & Cirrhosis
+    # 8. Liver Disease, Fatty Liver, Jaundice & Cirrhosis
     if any(w in t for w in ["liver", "fatty liver", "jaundice", "cirrhosis", "bilirubin", "sgot", "sgpt", "alt", "ast", "hepatitis", "కాలేయం", "పచ్చకామెర్లు", "लिवर", "पीलिया"]):
         if language == "te":
             reply = (
@@ -253,7 +401,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": rec
         }
 
-    # 6. Brain Stroke & Neurological Symptoms
+    # 9. Brain Stroke & Neurological Symptoms
     if any(w in t for w in ["stroke", "brain stroke", "paralysis", "slurred", "numbness", "weakness on one side", "facial droop", "బ్రెయిన్ స్ట్రోక్", "పక్షవాతం", "लकवा", "ब्रेन स्ट्रोक"]):
         if language == "te":
             reply = (
@@ -300,7 +448,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": rec
         }
 
-    # 7. PCOS / PCOD & Women's Hormonal Health
+    # 10. PCOS / PCOD & Women's Hormonal Health
     if any(w in t for w in ["pcos", "pcod", "period", "menstrual", "ovarian", "cramps", "facial hair", "hirsutism", "irregular period", "పీసీఓఎస్", "పీసీఓడీ", "పీరియడ్స్", "माहवारी"]):
         if language == "te":
             reply = (
@@ -349,7 +497,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": rec
         }
 
-    # 8. Diabetes, High Blood Sugar & Metabolic Health
+    # 11. Diabetes, High Blood Sugar & Metabolic Health
     if any(w in t for w in ["diabetes", "sugar", "glucose", "hba1c", "insulin", "thirst", "frequent urination", "డయాబెటిస్", "షుగర్", "మధుమేహం", "मधुमेह"]):
         if language == "te":
             reply = (
@@ -398,7 +546,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": rec
         }
 
-    # 9. Thyroid Disorders (Hypothyroidism / Hyperthyroidism)
+    # 12. Thyroid Disorders (Hypothyroidism / Hyperthyroidism)
     if any(w in t for w in ["thyroid", "hypothyroid", "hyperthyroid", "tsh", "t3", "t4", "goiter", "థైరాయిడ్", "थायराइड"]):
         return {
             "ai_reply": (
@@ -417,7 +565,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": "Check Serum TSH, Free T3, and Free T4 levels."
         }
 
-    # 10. Respiratory, Asthma & Chronic Cough
+    # 13. Respiratory, Asthma & Chronic Cough
     if any(w in t for w in ["asthma", "wheezing", "cough", "bronchitis", "pneumonia", "breath", "dammam", "ఆయాసం", "దగ్గు", "खांसी", "दमा"]):
         return {
             "ai_reply": (
@@ -439,7 +587,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": "Consult a Pulmonologist for Spirometry (Pulmonary Function Test) and Chest X-ray."
         }
 
-    # 11. Infectious Tropical Fevers: Dengue, Malaria, Typhoid
+    # 14. Infectious Tropical Fevers: Dengue, Malaria, Typhoid
     if any(w in t for w in ["dengue", "malaria", "typhoid", "chills", "platelet", "డెంగ్యూ", "మలేరియా", "టైఫాయిడ్", "डेंगू", "मलेरिया"]):
         return {
             "ai_reply": (
@@ -460,7 +608,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": "Get CBC (Complete Blood Picture), Dengue NS1/IgM, and Malaria Rapid Test immediately."
         }
 
-    # 12. Gastrointestinal & Acid Reflux / Ulcers
+    # 15. Gastrointestinal & Acid Reflux / Ulcers
     if any(w in t for w in ["acidity", "acid reflux", "gerd", "heartburn", "ulcer", "gastritis", "stomach pain", "nausea", "vomit", "కడుపు నొప్పి", "ఎసిడిటీ", "गैस", "पेट दर्द"]):
         return {
             "ai_reply": (
@@ -480,7 +628,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": "Adopt bland diet, avoid lying flat after meals, and consult a doctor if pain persists."
         }
 
-    # 13. Orthopedic, Arthritis & Joint Pain
+    # 16. Orthopedic, Arthritis & Joint Pain
     if any(w in t for w in ["joint pain", "arthritis", "knee pain", "uric acid", "gout", "back pain", "నొప్పులు", "కీళ్ల నొప్పులు", "जोड़ों का दर्द", "गठिया"]):
         return {
             "ai_reply": (
@@ -500,7 +648,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": "Check Serum Uric Acid, ESR, CRP, and X-ray of affected joints."
         }
 
-    # 14. Anemia & Blood Deficiency
+    # 17. Anemia & Blood Deficiency
     if any(w in t for w in ["anemia", "hemoglobin", "low hb", "pale", "dizzy", "fatigue", "రక్తహీనత", "ఎనీమియా", "खून की कमी"]):
         return {
             "ai_reply": (
@@ -517,7 +665,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             "recommendation": "Get Complete Blood Picture (CBP), Serum Ferritin, and Iron profile."
         }
 
-    # 15. General Multi-Symptom Pattern Matching Engine
+    # 18. General Empathetic Physician Consultation
     # For any general question or symptom description not explicitly matching above
     found_symptoms = []
     for sym, category in [
@@ -534,47 +682,38 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
 
     if language == "te":
         reply = (
-            f"🩺 **వైద్య విశ్లేషణ మరియు ప్రాథమిక అంచనా (Clinical Assessment):**\n\n"
-            f"మీరు వివరించిన లక్షణాలు: **{text}**\n\n"
-            "• **ప్రాథమిక సమాచారం (Basics):** ఈ రకమైన లక్షణాలు శరీరంలో తాపజనక ప్రతిస్పందన, రోగనిరోధక చర్య లేదా జీవక్రియల అసమతుల్యత వల్ల సంభవించవచ్చు.\n"
-            "• **ప్రాథమిక అంచనా (Disease Prediction):** ప్రాథమిక క్లినికల్ ప్రొఫైల్ - క్రమం తప్పకుండా పర్యవేక్షించవలసిన పరిస్థితి.\n"
-            "• **స్వీయ సంరక్షణ సలహాలు:**\n"
-            "  - పుష్కలంగా నీరు మరియు ద్రవపదార్థాలు తీసుకోండి.\n"
-            "  - శరీరానికి తగినంత విశ్రాంతి ఇవ్వండి.\n"
-            "  - శరీర ఉష్ణోగ్రత మరియు రక్తపోటును గమనించండి.\n\n"
-            "• **ముఖ్య సూచన:** సమస్య కొనసాగితే లేదా తీవ్రమైతే వెంటనే వైద్యుడిని సంప్రదించండి. మా **🩺 Disease Predictors** ట్యాబ్‌లోని కాలిక్యులేటర్లను కూడా ఉపయోగించవచ్చు."
+            f"🩺 **డాక్టర్ క్వాంటమ్ క్లినికల్ విశ్లేషణ:**\n\n"
+            f"మీరు వివరించిన లక్షణం: **\"{text}\"**\n\n"
+            "• **వైద్య పరమైన సమాచారం:** ఈ లక్షణాలు శరీరంలో తాపజనక ప్రతిస్పందన, రోగనిరోధక మార్పులు లేదా అలర్జీ వల్ల సంభవించవచ్చు.\n"
+            "• **ప్రాథమిక సలహా:** పుష్కలంగా నీరు త్రాగండి, విశ్రాంతి తీసుకోండి మరియు లక్షణాల తీవ్రతను గమనించండి.\n"
+            "• **ముఖ్య సూచన:** సమస్య 2-3 రోజులకు మించి కొనసాగితే లేదా ఇబ్బంది పెడుతుంటే వైద్యుడిని సంప్రదించండి."
         )
         doc = "జనరల్ ఫిజీషియన్ (సాధారణ వైద్యులు)"
         rec = "తగినంత విశ్రాంతి తీసుకోండి, పుష్కలంగా నీరు త్రాగండి మరియు వైద్యుడిని సంప్రదించండి."
     elif language == "hi":
         reply = (
-            f"🩺 **चिकित्सीय मूल्यांकन एवं रोग भविष्यवाणी (Clinical Assessment):**\n\n"
-            f"आपके द्वारा बताए गए लक्षण: **{text}**\n\n"
-            "• **बुनियादी जानकारी (Basics):** इस प्रकार के लक्षण संक्रमण, सूजन या चयापचय में बदलाव के कारण हो सकते हैं।\n"
-            "• **रोग भविष्यवाणी (Prediction):** प्राथमिक स्वास्थ्य मूल्यांकन प्रोफ़ाइल।\n"
-            "• **प्राथमिक देखभाल:**\n"
-            "  - पर्याप्त मात्रा में पानी और तरल पदार्थ पिएं।\n"
-            "  - भरपूर आराम करें।\n"
-            "  - शरीर के तापमान और लक्षणों पर नज़र रखें।\n\n"
-            "• **सुझाव:** यदि लक्षण 24-48 घंटों से अधिक बने रहते हैं, तो डॉक्टर से सलाह लें या हमारे **Disease Predictors** का उपयोग करें।"
+            f"🩺 **डॉ. क्वांटम क्लिनिकल मूल्यांकन:**\n\n"
+            f"आपके द्वारा बताए गए लक्षण: **\"{text}\"**\n\n"
+            "• **चिकित्सीय जानकारी:** यह स्थिति शरीर की प्रतिरक्षा प्रतिक्रिया, सूजन या पर्यावरणीय संवेदनशीलता के कारण हो सकती है।\n"
+            "• **प्राथमिक देखभाल:** पर्याप्त आराम करें, स्वच्छ पानी पिएं और लक्षणों की निगरानी करें।\n"
+            "• **सुझाव:** यदि समस्या बनी रहती है, तो विस्तृत जांच के लिए डॉक्टर से परामर्श लें।"
         )
         doc = "सामान्य चिकित्सक (General Physician)"
-        rec = "आराम करें, पानी पिएं और सामान्य चिकित्सक से परामर्श लें।"
+        rec = "आराम करें, पानी पिएं और सामान्य चिकित्सक से परामर्श लें."
     else:
         reply = (
-            f"🩺 **Clinical Evaluation & Disease Prediction Overview:**\n\n"
-            f"**Reported Concern / Symptoms:** \"{text}\"\n\n"
-            "• **Clinical Basics:** The symptom cluster you described typically reflects an inflammatory response, physiological metabolic shift, or localized bodily strain.\n"
-            "• **Preliminary Diagnostic Prediction:** General Medical Evaluation Profile.\n"
-            "• **Recommended Clinical Workup:** Complete Blood Count (CBC), Basic Metabolic Panel, and vitals monitoring.\n"
-            "• **Supportive Home Care:**\n"
-            "  - Maintain optimal hydration with water and electrolyte broths.\n"
-            "  - Ensure 7–8 hours of restful sleep and avoid physical overexertion.\n"
-            "  - Monitor any changes in temperature, pain intensity, or respiration.\n\n"
-            "💡 *QuantumMedAI Recommendation:* You can run dedicated precision assessments in our **🩺 Disease Predictors** tab (Heart, Kidney, Liver, Stroke, PCOS, BMI) or consult a General Physician."
+            f"🩺 **Dr. Quantum Clinical Consultation:**\n\n"
+            f"**Regarding your inquiry:** \"{text}\"\n\n"
+            "### 🔍 Clinical Overview:\n"
+            "Based on what you've described, this concern is likely related to localized physiological sensitivity, an immune/allergic response, or mild inflammation.\n\n"
+            "### 💡 Supportive Next Steps:\n"
+            "- **Observation:** Note if specific triggers (foods, weather changes, soaps, stress) correlate with flare-ups.\n"
+            "- **Supportive Care:** Maintain good hydration, gentle hygiene, and avoid self-medicating with unverified remedies.\n"
+            "- **Evaluation:** If symptoms persist beyond a few days or cause significant discomfort, an in-person clinical examination will provide the most precise diagnosis.\n\n"
+            "💡 *QuantumMedAI Recommendation:* You can also explore our **🩺 Disease Predictors** tab to run specialized assessments (Heart, Kidney, Liver, Stroke, PCOS, BMI)."
         )
         doc = "General Physician"
-        rec = "Hydrate, rest, monitor symptoms, and consult a General Physician for clinical evaluation."
+        rec = "Monitor symptoms, avoid known irritants, and consult a physician if discomfort persists."
 
     return {
         "ai_reply": reply,
