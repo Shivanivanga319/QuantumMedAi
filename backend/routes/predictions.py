@@ -37,6 +37,14 @@ class SymptomAnalysisRequest(BaseModel):
 
 
 def generate_well_mannered_clinical_response(text: str, document_name: Optional[str] = None, language: str = "en") -> dict:
+    # Auto-detect language from script if not explicitly provided
+    if any('\u0c00' <= char <= '\u0c7f' for char in text):
+        language = "te"
+    elif any('\u0900' <= char <= '\u097f' for char in text):
+        language = "hi"
+    else:
+        language = (language or "en").lower().strip()
+
     t = text.lower().strip()
     
     # 1. Flexible Greetings & Introductions
@@ -233,9 +241,31 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
         }
 
     # 5. Conversational Follow-up Questions (e.g. "what to do", "how to cure it", "what medicine", "is it curable")
-    if any(w in t for w in ["what to do", "how to cure", "how to treat", "what medicine", "which medicine", "can it be cured", "is it curable", "how long", "what should i do", "remedy", "ointment", "cream", "ఏం చేయాలి", "ఎలా తగ్గించుకోవాలి", "क्या करें", "इलाज"]):
-        return {
-            "ai_reply": (
+    if any(w in t for w in ["what to do", "how to cure", "how to treat", "what medicine", "which medicine", "can it be cured", "is it curable", "how long", "what should i do", "remedy", "ointment", "cream", "treatment", "cure", "ఏం చేయాలి", "ఎలా తగ్గించుకోవాలి", "మందులు", "చికిత్స", "నివారణ", "क्या करें", "इलाज", "दवा", "उपचार"]):
+        if language == "te":
+            reply = (
+                "🩺 **చికిత్స & స్వీయ సంరక్షణ సూచనలు (Clinical Management Guidance):**\n\n"
+                "• **ముఖ్యమైన దశలు:**\n"
+                "  1. **కారణాలను గుర్తించండి:** సమస్యను తీవ్రతరం చేసే అంశాలను (కఠినమైన సబ్బులు, దుమ్ము, అలర్జీ ఆహారాలు, ఒత్తిడి) నివారించండి.\n"
+                "  2. **సహజ రక్షణను పునరుద్ధరించండి:** చర్మ సమస్యల కోసం క్రమం తప్పకుండా సెరమైడ్ మాయిశ్చరైజర్ లేదా కొబ్బరి నూనె రాయండి. అంతర్గత సమస్యల కోసం తగినంత నీరు త్రాగండి.\n"
+                "  3. **ప్రాథమిక ఉపశమనం:** దురద లేదా అలర్జీల కోసం సిట్రిజిన్ (Cetirizine) వంటి యాంటీహిస్టామైన్లు మరియు మైల్డ్ క్రీములు ఉపశమనం కలిగిస్తాయి.\n"
+                "  4. **వైద్యుడిని ఎప్పుడు సంప్రదించాలి:** లక్షణాలు 5-7 రోజులకు మించి కొనసాగితే లేదా తీవ్రమైతే స్పెషలిస్ట్ వైద్యుడిని సంప్రదించి పరీక్షలు చేయించుకోండి."
+            )
+            doc = "జనరల్ ఫిజీషియన్ / సంబంధిత స్పెషలిస్ట్"
+            rec = "గృహ సంరక్షణ పాటించండి మరియు తగిన ప్రిస్క్రిప్షన్ కోసం స్పెషలిస్ట్‌ను సంప్రదించండి."
+        elif language == "hi":
+            reply = (
+                "🩺 **उपचार एवं नैदानिक प्रबंधन मार्गदर्शन (Treatment Guidance):**\n\n"
+                "• **चरणबद्ध दृष्टिकोण:**\n"
+                "  1. **ट्रिगर्स से बचें:** उन चीजों से दूर रहें जो समस्या को बढ़ाती हैं (जैसे कठोर साबुन, धूल, तनाव, तैलीय भोजन)।\n"
+                "  2. **त्वचा व शरीर की सुरक्षा:** त्वचा संबंधी समस्याओं में नियमित मॉइस्चराइज़र लगाएं और भरपूर पानी पिएं।\n"
+                "  3. **प्राथमिक राहत:** एलर्जी या खुजली के लिए एंटीहिस्टामाइन और माइल्ड क्रीम सहायक होती हैं।\n"
+                "  4. **डॉक्टरी सलाह:** यदि लक्षण 5-7 दिनों से अधिक समय तक बने रहते हैं, तो विशेषज्ञ डॉक्टर से परामर्श लें।"
+            )
+            doc = "सामान्य चिकित्सक / संबंधित विशेषज्ञ"
+            rec = "घरेलू देखभाल करें और व्यक्तिगत नुस्खे के लिए विशेषज्ञ से परामर्श लें।"
+        else:
+            reply = (
                 "🩺 **Treatment & Clinical Management Guidance:**\n\n"
                 "### 💡 Recommended Step-by-Step Approach:\n"
                 "1. **Identify & Eliminate Triggers:** Pay attention to substances that worsen the symptoms (fragrances, specific foods, harsh soaps, dust, stress).\n"
@@ -245,17 +275,22 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "   - *For Inflammation/Pain:* Warm/cold compresses and rest.\n"
                 "4. **When to Seek Prescription Care:** If symptoms persist beyond 5–7 days, cause severe discomfort, or show signs of infection (pus, warmth, severe pain).\n\n"
                 "👨‍⚕️ **Next Step:** Consult the relevant specialist doctor for an in-person diagnostic workup and tailored prescription."
-            ),
+            )
+            doc = "General Physician / Specialist"
+            rec = "Follow supportive home care and consult a specialist for personalized prescription therapy."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": False,
             "matched_keywords": ["Treatment Inquiry", "Clinical Management"],
             "detected_diseases": ["Therapeutic Management Guidance"],
             "risk_level": "Low",
-            "doctor": "General Physician / Specialist",
-            "recommendation": "Follow supportive home care and consult a specialist for personalized prescription therapy."
+            "doctor": doc,
+            "recommendation": rec
         }
 
     # 6. Heart Disease, Hypertension & Cardiovascular Risk
-    if any(w in t for w in ["heart", "cardiac", "cardiovascular", "cholesterol", "blood pressure", "hypertension", "palpitation", "arrhythmia", "angina", "coronary", "గుండె", "హై బీపీ", "హృదయ", "कोलेस्ट्रॉल"]):
+    if any(w in t for w in ["heart", "cardiac", "cardiovascular", "cholesterol", "blood pressure", "hypertension", "palpitation", "arrhythmia", "angina", "coronary", "chest", "గుండె", "హై బీపీ", "హృదయ", "కోలెస్ట్రాల్", "ఛాతీ", "दिल", "हृदय", "रक्तचाप", "कोलेस्ट्रॉल", "सीने", "छाती"]):
         if language == "te":
             reply = (
                 "🫀 **గుండె & రక్తనాళాల ఆరోగ్య విశ్లేషణ (Cardiovascular Assessment):**\n\n"
@@ -304,7 +339,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
         }
 
     # 7. Kidney Disease, Chronic Kidney Disease (CKD) & Kidney Stones
-    if any(w in t for w in ["kidney", "renal", "creatinine", "kidney stone", "proteinuria", "urea", "gfr", "కిడ్నీ", "మూత్రపిండ", "गुर्दा", "किडनी"]):
+    if any(w in t for w in ["kidney", "renal", "creatinine", "kidney stone", "proteinuria", "urea", "gfr", "కిడ్నీ", "మూత్రపిండ", "గుర్దా", "गुर्दा", "किडनी"]):
         if language == "te":
             reply = (
                 "💧 **కిడ్నీ (మూత్రపిండాల) ఆరోగ్య విశ్లేషణ (Renal Assessment):**\n\n"
@@ -314,7 +349,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "• **సంరక్షణ:** రోజుకు 2.5–3 లీటర్ల నీరు త్రాగండి, నొప్పి నివారణ మందులు (NSAIDs) అతిగా వాడకండి.\n"
                 "• **సిఫార్సు:** మా **🩺 Disease Predictors** ట్యాబ్‌లోని **Chronic Kidney Disease Predictor** ఉపయోగించండి."
             )
-            doc = "నెఫ్రాలజిస్ట్ / యూరాలజిస్ట్"
+            doc = "నెఫ్రాలజిస్ట్ / యూరాలజిస్ట్ (Nephrologist / Urologist)"
             rec = "సీరమ్ క్రియాటినిన్, బ్లడ్ యూరియా మరియు యూరిన్ రొటీన్ పరీక్ష చేయించుకోండి."
         elif language == "hi":
             reply = (
@@ -402,7 +437,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
         }
 
     # 9. Brain Stroke & Neurological Symptoms
-    if any(w in t for w in ["stroke", "brain stroke", "paralysis", "slurred", "numbness", "weakness on one side", "facial droop", "బ్రెయిన్ స్ట్రోక్", "పక్షవాతం", "लकवा", "ब्रेन स्ट्रोक"]):
+    if any(w in t for w in ["stroke", "brain stroke", "paralysis", "slurred", "numbness", "weakness on one side", "facial droop", "బ్రెయిన్ స్ట్రోక్", "పక్షవాతం", "లక్వా", "लकवा", "ब्रेन स्ट्रोक"]):
         if language == "te":
             reply = (
                 "🧠 **బ్రెయిన్ స్ట్రోక్ & న్యూరోలాజికల్ హెచ్చరిక (Stroke Warning):**\n\n"
@@ -449,7 +484,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
         }
 
     # 10. PCOS / PCOD & Women's Hormonal Health
-    if any(w in t for w in ["pcos", "pcod", "period", "menstrual", "ovarian", "cramps", "facial hair", "hirsutism", "irregular period", "పీసీఓఎస్", "పీసీఓడీ", "పీరియడ్స్", "माहवारी"]):
+    if any(w in t for w in ["pcos", "pcod", "period", "menstrual", "ovarian", "cramps", "facial hair", "hirsutism", "irregular period", "పీసీఓఎస్", "పీసీఓడీ", "పీరియడ్స్", "ఋతుస్రావం", "माहवारी", "पीसीओएस", "अनियमित पीरियड्स"]):
         if language == "te":
             reply = (
                 "🌸 **PCOS / PCOD మరియు హార్మోన్ల ఆరోగ్య విశ్లేషణ:**\n\n"
@@ -459,7 +494,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "• **సంరక్షణ:** తక్కువ గ్లైసెమిక్ (Low-GI) ఆహారం, రోజూ వ్యాయామం, ఒత్తిడి తగ్గించుకోవడం.\n"
                 "• **సిఫార్సు:** మా **🩺 Disease Predictors** లోని **PCOS & PCOD Predictors** ను ఉపయోగించండి."
             )
-            doc = "గైనకాలజిస్ట్ / ఎండోక్రైనాలజిస్ట్"
+            doc = "గైనకాలజిస్ట్ / ఎండోక్రైనాలజిస్ట్ (Gynecologist / Endocrinologist)"
             rec = "పెల్విక్ అల్ట్రాసౌండ్ స్కాన్ మరియు హార్మోన్ ప్రొఫైల్ (FSH, LH, AMH, థైరాయిడ్) పరీక్షించండి."
         elif language == "hi":
             reply = (
@@ -498,7 +533,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
         }
 
     # 11. Diabetes, High Blood Sugar & Metabolic Health
-    if any(w in t for w in ["diabetes", "sugar", "glucose", "hba1c", "insulin", "thirst", "frequent urination", "డయాబెటిస్", "షుగర్", "మధుమేహం", "मधुमेह"]):
+    if any(w in t for w in ["diabetes", "sugar", "glucose", "hba1c", "insulin", "thirst", "frequent urination", "డయాబెటిస్", "షుగర్", "మధుమేహం", "చక్కెర", "मधुमेह", "शुगर", "डायबिटीज"]):
         if language == "te":
             reply = (
                 "🍬 **డయాబెటిస్ & రక్తంలో చక్కెర స్థాయిల విశ్లేషణ:**\n\n"
@@ -508,7 +543,7 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "• **సంరక్షణ:** తీపి పదార్థాలు మానేయండి, తృణధాన్యాలు తీసుకోండి, రోజూ నడవండి.\n"
                 "• **సిఫార్సు:** ఫాస్టింగ్ బ్లడ్ షుగర్ మరియు HbA1c పరీక్షలు చేయించుకోండి."
             )
-            doc = "ఎండోక్రైనాలజిస్ట్ / డయాబెటాలజిస్ట్"
+            doc = "ఎండోక్రైనాలజిస్ట్ / డయాబెటాలజిస్ట్ (Endocrinologist)"
             rec = "Fasting Blood Sugar (FBS), Post-Prandial (PPBS), మరియు HbA1c పరీక్షలు చేయించుకోండి."
         elif language == "hi":
             reply = (
@@ -547,28 +582,77 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
         }
 
     # 12. Thyroid Disorders (Hypothyroidism / Hyperthyroidism)
-    if any(w in t for w in ["thyroid", "hypothyroid", "hyperthyroid", "tsh", "t3", "t4", "goiter", "థైరాయిడ్", "थायराइड"]):
-        return {
-            "ai_reply": (
+    if any(w in t for w in ["thyroid", "hypothyroid", "hyperthyroid", "tsh", "t3", "t4", "goiter", "థైరాయిడ్", "గైటర్", "थायराइड", "थायरॉयड"]):
+        if language == "te":
+            reply = (
+                "🦋 **థైరాయిడ్ గ్రంథి పనితీరు విశ్లేషణ (Thyroid Function Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** థైరాయిడ్ గ్రంథి T3, T4 హార్మోన్లను ఉత్పత్తి చేయడం ద్వారా శరీర జీవక్రియలను (Metabolism) నియంత్రిస్తుంది.\n"
+                "• **హైపోథైరాయిడిజం లక్షణాలు:** బరువు పెరగడం, చలికి తట్టుకోలేకపోవడం, పొడి చర్మం, జుట్టు రాలడం, అలసట.\n"
+                "• **హైపర్‌థైరాయిడిజం లక్షణాలు:** వేగంగా బరువు తగ్గడం, గుండె దడ, వేడికి చెమటలు పట్టడం, చేతులు వణకడం.\n"
+                "• **ప్రాథమిక అంచనా:** థైరాయిడ్ హార్మోన్ల అసమతుల్యత.\n"
+                "• **సిఫార్సు:** సీరమ్ థైరాయిడ్ ప్రొఫైల్ (TSH, Free T3, Free T4) పరీక్ష చేయించుకోండి."
+            )
+            doc = "ఎండోక్రైనాలజిస్ట్ (థైరాయిడ్ నిపుణులు)"
+            rec = "సీరమ్ TSH, Free T3 మరియు Free T4 పరీక్ష చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "🦋 **थायराइड ग्रंथि और हार्मोनल मूल्यांकन (Thyroid Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** थायराइड ग्रंथि T3 और T4 हार्मोन के माध्यम से शरीर के मेटाबॉलिज्म को नियंत्रित करती है।\n"
+                "• **हाइपोथायरायडिज्म के लक्षण:** अचानक वजन बढ़ना, अत्यधिक ठंड लगना, रूखी त्वचा, बालों का झड़ना, थकान।\n"
+                "• **हाइपरथायरायडिज्म के लक्षण:** तेजी से वजन कम होना, दिल की धड़कन तेज होना, अधिक पसीना आना, घबराहट।\n"
+                "• **रोग भविष्यवाणी:** थायराइड एंडोक्राइन विकार।\n"
+                "• **सुझाव:** सीरम थायराइड प्रोफाइल (TSH, T3, T4) टेस्ट करवाएं।"
+            )
+            doc = "एंडोक्रिनोलॉजिस्ट (थायराइड विशेषज्ञ)"
+            rec = "सीरम TSH, Free T3, और Free T4 स्तरों की जांच करवाएं।"
+        else:
+            reply = (
                 "🦋 **Thyroid Function & Endocrine Assessment:**\n\n"
                 "• **Condition Basics:** The thyroid gland regulates whole-body metabolism, thermogenesis, and heart rate through T3 and T4 hormones.\n"
                 "• **Hypothyroid Signs:** Weight gain despite normal appetite, extreme cold sensitivity, dry skin, constipation, and hair loss.\n"
                 "• **Hyperthyroid Signs:** Rapid heart rate, heat intolerance, tremor, unintended weight loss, and restlessness.\n"
                 "• **Diagnostic Prediction:** Thyroid Endocrine Dysfunction Profile.\n"
                 "• **Next Steps:** Obtain a comprehensive Serum Thyroid Panel (TSH, Free T3, Free T4) and consult an Endocrinologist."
-            ),
+            )
+            doc = "Endocrinologist"
+            rec = "Check Serum TSH, Free T3, and Free T4 levels."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": False,
             "matched_keywords": ["Thyroid Hormones", "TSH", "Endocrine"],
             "detected_diseases": ["Thyroid Dysfunction Profile"],
             "risk_level": "Low" if "mild" in t else "Moderate",
-            "doctor": "Endocrinologist",
-            "recommendation": "Check Serum TSH, Free T3, and Free T4 levels."
+            "doctor": doc,
+            "recommendation": rec
         }
 
     # 13. Respiratory, Asthma & Chronic Cough
-    if any(w in t for w in ["asthma", "wheezing", "cough", "bronchitis", "pneumonia", "breath", "dammam", "ఆయాసం", "దగ్గు", "खांसी", "दमा"]):
-        return {
-            "ai_reply": (
+    if any(w in t for w in ["asthma", "wheezing", "cough", "bronchitis", "pneumonia", "breath", "dammam", "ఆయాసం", "దగ్గు", "శ్వాస", "దమ్ము", "खांसी", "दमा", "सांस फूलना"]):
+        if language == "te":
+            reply = (
+                "🫁 **శ్వాసకోశ మరియు ఆస్తమా ఆరోగ్య విశ్లేషణ (Pulmonary Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** శ్వాసనాళాల్లో వాపు లేదా సంకోచం (ఆస్తమా/బ్రోన్కైటిస్) వల్ల శ్వాస తీసుకోవడం కష్టమవుతుంది.\n"
+                "• **ముఖ్యమైన లక్షణాలు:** పిల్లికూతలు (Wheezing), పొడి లేదా కఫంతో కూడిన దగ్గు, ఛాతీలో బిగుతుగా ఉండటం, నడిచినప్పుడు ఆయాసం.\n"
+                "• **ప్రాథమిక అంచనా:** బ్రోంకియల్ ఆస్తమా / రెస్పిరేటరీ ఇన్ఫెక్షన్ ప్రొఫైల్.\n"
+                "• **సంరక్షణ సూచనలు:** గోరువెచ్చని ఆవిరి పట్టండి, దుమ్ము, పొగ, చల్లని గాలికి దూరంగా ఉండండి.\n"
+                "• **హెచ్చరిక:** శ్వాస తీసుకోవడం చాలా కష్టంగా ఉంటే వెంటనే అత్యవసర వైద్య సహాయం తీసుకోండి."
+            )
+            doc = "పల్మనాలజిస్ట్ (శ్వాసకోశ నిపుణులు)"
+            rec = "పల్మనాలజిస్ట్‌ను సంప్రదించి స్పైరోమెట్రీ (PFT) మరియు ఛాతీ ఎక్స్-రే చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "🫁 **श्वसन और अस्थमा स्वास्थ्य मूल्यांकन (Pulmonary Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** श्वासनली में सूजन या रुकावट के कारण सांस लेने में तकलीफ (अस्थमा या ब्रोंकाइटिस) होती है।\n"
+                "• **प्रमुख लक्षण:** सांस लेते समय सीटी जैसी आवाज (Wheezing), लगातार खांसी, सीने में जकड़न, सांस फूलना।\n"
+                "• **रोग भविष्यवाणी:** ब्रोन्कियल अस्थमा / श्वसन संक्रमण।\n"
+                "• **घरेलू देखभाल:** दिन में दो बार भाप लें, धूल, धुएं और ठंडी हवा से बचें।\n"
+                "• **चेतावनी:** अत्यधिक सांस फूलने पर तुरंत आपातकालीन चिकित्सा सहायता लें।"
+            )
+            doc = "पल्मोनोलॉजिस्ट (श्वसन रोग विशेषज्ञ)"
+            rec = "पल्मोनोलॉजिस्ट से मिलकर स्पायरोमेट्री और चेस्ट एक्स-रे करवाएं।"
+        else:
+            reply = (
                 "🫁 **Respiratory & Pulmonary Health Assessment:**\n\n"
                 "• **Condition Basics:** Respiratory tract symptoms stem from airway inflammation, bronchospasm (asthma), or viral/bacterial infections (bronchitis/pneumonia).\n"
                 "• **Key Symptoms:** Wheezing sound while breathing out, persistent dry or productive cough, chest tightness, and shortness of breath during exertion.\n"
@@ -578,19 +662,45 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "  - Avoid allergen triggers (dust, smoke, cold air, pet dander).\n"
                 "  - Use prescribed inhalers as directed by your physician.\n\n"
                 "⚠️ *Warning: Seek emergency care immediately if you experience severe shortness of breath or blue lips.*"
-            ),
+            )
+            doc = "Pulmonologist / Chest Physician"
+            rec = "Consult a Pulmonologist for Spirometry (Pulmonary Function Test) and Chest X-ray."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": "severe breath" in t or "can't breathe" in t,
             "matched_keywords": ["Pulmonary Airway", "Wheezing", "Cough"],
             "detected_diseases": ["Bronchial Asthma / Pulmonary Condition"],
             "risk_level": "High" if "severe" in t else "Moderate",
-            "doctor": "Pulmonologist / Chest Physician",
-            "recommendation": "Consult a Pulmonologist for Spirometry (Pulmonary Function Test) and Chest X-ray."
+            "doctor": doc,
+            "recommendation": rec
         }
 
     # 14. Infectious Tropical Fevers: Dengue, Malaria, Typhoid
-    if any(w in t for w in ["dengue", "malaria", "typhoid", "chills", "platelet", "డెంగ్యూ", "మలేరియా", "టైఫాయిడ్", "डेंगू", "मलेरिया"]):
-        return {
-            "ai_reply": (
+    if any(w in t for w in ["dengue", "malaria", "typhoid", "chills", "platelet", "డెంగ్యూ", "మలేరియా", "టైఫాయిడ్", "చలిజ్వరం", "ప్లేట్‌లెట్స్", "डेंगू", "मलेरिया", "टाइफाइड", "प्लेटलेट्स"]):
+        if language == "te":
+            reply = (
+                "🦟 **ఇన్‌ఫెక్షియస్ & ట్రాపికల్ జ్వరాల విశ్లేషణ (Tropical Fever Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** డెంగ్యూ, మలేరియా, టైఫాయిడ్ వంటి ఇన్ఫెక్షన్లు తీవ్రమైన జ్వరం, చలి మరియు ప్లేట్‌లెట్ల సంఖ్య తగ్గడానికి కారణమవుతాయి.\n"
+                "• **లక్షణాలు:** తీవ్రమైన చలిజ్వరం, కళ్ల వెనుక నొప్పి, కండరాలు మరియు కీళ్ల నొప్పులు, విపరీతమైన నీరసం.\n"
+                "• **ప్రాథమిక అంచనా:** డెంగ్యూ / మలేరియా / టైఫాయిడ్ ఇన్‌ఫెక్షన్ ప్రొఫైల్.\n"
+                "• **సంరక్షణ:** కొబ్బరి నీళ్ళు, ORS ద్రవాలు అధికంగా త్రాగండి. ప్రతి 24 గంటలకు CBC పరీక్ష ద్వారా ప్లేట్‌లెట్లను పర్యవేక్షించండి.\n"
+                "• **సిఫార్సు:** వెంటనే డాక్టర్‌ను సంప్రదించి రక్త పరీక్షలు చేయించుకోండి."
+            )
+            doc = "జనరల్ ఫిజీషియన్ / ఇన్‌ఫెక్షియస్ డిసీజ్ నిపుణులు"
+            rec = "రక్త పరీక్ష (CBC - Platelets), డెంగ్యూ NS1/IgM, మరియు మలేరియా పరీక్ష చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "🦟 **संक्रामक व उष्णकटिबंधीय बुखार मूल्यांकन (Tropical Fever Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** डेंगू, मलेरिया और टाइफाइड तीव्र बुखार, कंपकंपी और प्लेटलेट्स की कमी का कारण बनते हैं।\n"
+                "• **प्रमुख लक्षण:** तेज बुखार के साथ कंपकंपी, आंखों के पीछे दर्द, जोड़ों और मांसपेशियों में तेज दर्द, अत्यधिक कमजोरी।\n"
+                "• **रोग भविष्यवाणी:** डेंगू / मलेरिया / टाइफाइड संक्रमण।\n"
+                "• **घरेलू देखभाल:** ओआरएस (ORS), नारियल पानी और तरल पदार्थों का अधिक सेवन करें। हर 24 घंटे में सीबीसी टेस्ट से प्लेटलेट्स की जांच करें।"
+            )
+            doc = "सामान्य चिकित्सक / संक्रामक रोग विशेषज्ञ"
+            rec = "सीबीसी (CBC Platelet Count), डेंगू NS1/IgM और मलेरिया टेस्ट तुरंत करवाएं।"
+        else:
+            reply = (
                 "🦟 **Tropical & Infectious Fever Assessment:**\n\n"
                 "• **Condition Basics:** Vector-borne and bacterial infections (Dengue, Malaria, Typhoid) cause acute systemic inflammation, high fever, and hematological shifts (platelet drops).\n"
                 "• **Key Symptoms:** Sudden high-grade fever with shaking chills, severe retro-orbital (behind eyes) pain, joint/muscle aches, and rash.\n"
@@ -599,19 +709,44 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "  - Maintain aggressive oral hydration (ORS, coconut water, soups).\n"
                 "  - Avoid aspirin and ibuprofen which can increase bleeding risk.\n"
                 "  - Get a Complete Blood Count (CBC) to monitor platelet counts every 24 hours."
-            ),
+            )
+            doc = "General Physician / Infectious Disease Specialist"
+            rec = "Get CBC (Complete Blood Picture), Dengue NS1/IgM, and Malaria Rapid Test immediately."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": "bleeding" in t or "low platelet" in t,
             "matched_keywords": ["Tropical Fever", "Platelets", "Infection"],
             "detected_diseases": ["Dengue / Malaria / Typhoid Fever Profile"],
             "risk_level": "High",
-            "doctor": "General Physician / Infectious Disease Specialist",
-            "recommendation": "Get CBC (Complete Blood Picture), Dengue NS1/IgM, and Malaria Rapid Test immediately."
+            "doctor": doc,
+            "recommendation": rec
         }
 
     # 15. Gastrointestinal & Acid Reflux / Ulcers
-    if any(w in t for w in ["acidity", "acid reflux", "gerd", "heartburn", "ulcer", "gastritis", "stomach pain", "nausea", "vomit", "కడుపు నొప్పి", "ఎసిడిటీ", "गैस", "पेट दर्द"]):
-        return {
-            "ai_reply": (
+    if any(w in t for w in ["acidity", "acid reflux", "gerd", "heartburn", "ulcer", "gastritis", "stomach pain", "nausea", "vomit", "కడుపు నొప్పి", "ఎసిడిటీ", "గ్యాస్", "మంట", "గ్యాస్ట్రిక్", "गैस", "पेट दर्द", "एसिडिटी", "उल्टी"]):
+        if language == "te":
+            reply = (
+                "🍽️ **జీర్ణశయాంతర & ఎసిడిటీ విశ్లేషణ (Gastrointestinal Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** కడుపులో ఆమ్లం పెరగడం లేదా జీర్ణాశయం వాపు (గ్యాస్ట్రిటిస్/GERD) వల్ల గుండెల్లో మంట మరియు కడుపు నొప్పి కలుగుతాయి.\n"
+                "• **లక్షణాలు:** ఛాతీ/కడుపులో మంట, పుల్లటి తేన్పులు, కడుపుబ్బరం, వికారం, భోజనం తర్వాత అసౌకర్యం.\n"
+                "• **ప్రాథమిక అంచనా:** గ్యాస్ట్రోఎసోఫాగియల్ రిఫ్లక్స్ (GERD) / గ్యాస్ట్రిటిస్ ప్రొఫైల్.\n"
+                "• **సంరక్షణ సూచనలు:** కారం, నూనె పదార్థాలు తగ్గించండి. భోజనం చేసిన వెంటనే పడుకోకండి."
+            )
+            doc = "గ్యాస్ట్రోఎంటరాలజిస్ట్ / జనరల్ ఫిజీషియన్"
+            rec = "సహజమైన తేలికపాటి ఆహారం తీసుకోండి, భోజనం తర్వాత 2 గంటల వరకు పడుకోకండి."
+        elif language == "hi":
+            reply = (
+                "🍽️ **पाचन तंत्र एवं एसिडिटी मूल्यांकन (Gastrointestinal Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** पेट में अत्यधिक एसिड बनने या सूजन के कारण सीने में जलन और पेट दर्द (GERD या गैस्ट्राइटिस) होता है।\n"
+                "• **प्रमुख लक्षण:** सीने में जलन (Heartburn), खट्टी डकारें, पेट में भारीपन, मतली, भोजन के बाद दर्द।\n"
+                "• **रोग भविष्यवाणी:** एसिड रिफ्लक्स (GERD) / गैस्ट्राइटिस।\n"
+                "• **घरेलू देखभाल:** मसालेदार और तैलीय भोजन बंद करें, खाना खाने के तुरंत बाद न लेटें।"
+            )
+            doc = "गैस्ट्रोएंटेरोलॉजिस्ट / सामान्य चिकित्सक"
+            rec = "हल्का और सुपाच्य भोजन लें, डॉक्टर से एंटासिड या चिकित्सीय सलाह लें।"
+        else:
+            reply = (
                 "🍽️ **Gastrointestinal & Digestive Health Overview:**\n\n"
                 "• **Condition Basics:** Acidity, GERD, and gastritis occur when stomach acid irritates the esophageal lining or gastric mucosa due to delayed emptying, diet, or H. pylori.\n"
                 "• **Key Symptoms:** Burning sensation in chest/upper abdomen, acid regurgitation, bloating, nausea, and discomfort after meals.\n"
@@ -619,19 +754,44 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "  - Eat smaller, frequent meals and avoid lying down for 2 hours post-meal.\n"
                 "  - Eliminate spicy, oily, caffeinated, and deeply acidic foods.\n"
                 "  - Sip warm chamomile or ginger water for soothing digestion."
-            ),
+            )
+            doc = "Gastroenterologist / General Physician"
+            rec = "Adopt bland diet, avoid lying flat after meals, and consult a doctor if pain persists."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": False,
             "matched_keywords": ["Gastrointestinal", "Acid Reflux", "Gastritis"],
             "detected_diseases": ["GERD / Gastritis / Peptic Discomfort"],
             "risk_level": "Low" if "mild" in t else "Moderate",
-            "doctor": "Gastroenterologist / General Physician",
-            "recommendation": "Adopt bland diet, avoid lying flat after meals, and consult a doctor if pain persists."
+            "doctor": doc,
+            "recommendation": rec
         }
 
     # 16. Orthopedic, Arthritis & Joint Pain
-    if any(w in t for w in ["joint pain", "arthritis", "knee pain", "uric acid", "gout", "back pain", "నొప్పులు", "కీళ్ల నొప్పులు", "जोड़ों का दर्द", "गठिया"]):
-        return {
-            "ai_reply": (
+    if any(w in t for w in ["joint pain", "arthritis", "knee pain", "uric acid", "gout", "back pain", "నొప్పులు", "కీళ్ల నొప్పులు", "మోకాళ్ళ నొప్పి", "యూరిక్ యాసిడ్", "जोड़ों का दर्द", "गठिया", "घुटने का दर्द"]):
+        if language == "te":
+            reply = (
+                "🦴 **కీళ్ళు మరియు ఆర్థరైటిస్ ఆరోగ్య విశ్లేషణ (Orthopedic Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** కీళ్ల నొప్పులు ఆస్టియో ఆర్థరైటిస్ (మృదులాస్థి అరిగిపోవడం) లేదా యూరిక్ యాసిడ్ పెరగడం (గౌట్) వల్ల వస్తాయి.\n"
+                "• **లక్షణాలు:** ఉదయం పూట కీళ్ళలో బిగుతుగా ఉండటం, కీళ్ల వాపు, నడిచేటప్పుడు నొప్పి, కీళ్లలో శబ్దాలు రావడం.\n"
+                "• **ప్రాథమిక అంచనా:** ఆర్థరైటిస్ / మస్క్యులోస్కెలిటల్ ప్రొఫైల్.\n"
+                "• **సంరక్షణ:** గోరువెచ్చని కాపడం పెట్టండి, తక్కువ ప్రభావం చూపే నడక లేదా ఈత వంటి వ్యాయామాలు చేయండి."
+            )
+            doc = "ఆర్థోపెడిక్ సర్జన్ / రుమటాలజిస్ట్ (Orthopedic Specialist)"
+            rec = "సీరమ్ యూరిక్ యాసిడ్, ESR మరియు సంబంధిత కీళ్ల ఎక్స్-రే చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "🦴 **जोड़ों का दर्द एवं गठिया मूल्यांकन (Orthopedic Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** जोड़ों में दर्द और अकड़न ऑस्टियोआर्थराइटिस (कार्टिलेज घिसना) या यूरिक एसिड बढ़ने (गाउट) के कारण होती है।\n"
+                "• **प्रमुख लक्षण:** जोड़ों में सूजन, सुबह उठने पर अकड़न, चलने में दर्द, जोड़ों से कट-कट की आवाज।\n"
+                "• **रोग भविष्यवाणी:** गठिया (Arthritis) / मस्कुलोस्केलेटल दर्द।\n"
+                "• **घरेलू देखभाल:** जोड़ों पर गर्म सिकाई करें, भारी वजन उठाने से बचें।"
+            )
+            doc = "ऑर्थोपेडिक सर्जन / रूमेटोलॉजिस्ट"
+            rec = "सीरम यूरिक एसिड, ESR और प्रभावित जोड़ों का एक्स-रे करवाएं।"
+        else:
+            reply = (
                 "🦴 **Joint Health, Arthritis & Musculoskeletal Assessment:**\n\n"
                 "• **Condition Basics:** Joint pain and stiffness often indicate Osteoarthritis (cartilage wear), Rheumatoid Arthritis (autoimmune inflammation), or Gout (uric acid crystals).\n"
                 "• **Key Symptoms:** Joint swelling, morning stiffness lasting >30 minutes, cracking sounds, and restricted mobility.\n"
@@ -639,30 +799,60 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
                 "  - Apply warm compresses for chronic stiffness or cold packs for acute swelling.\n"
                 "  - Low-impact exercises like swimming and gentle stretching.\n"
                 "  - Restrict high-purine foods (red meat, seafood) if uric acid is elevated."
-            ),
+            )
+            doc = "Orthopedic Specialist / Rheumatologist"
+            rec = "Check Serum Uric Acid, ESR, CRP, and X-ray of affected joints."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": False,
             "matched_keywords": ["Musculoskeletal", "Joint Pain", "Uric Acid"],
             "detected_diseases": ["Arthritis / Musculoskeletal Evaluation"],
             "risk_level": "Low" if "mild" in t else "Moderate",
-            "doctor": "Orthopedic Specialist / Rheumatologist",
-            "recommendation": "Check Serum Uric Acid, ESR, CRP, and X-ray of affected joints."
+            "doctor": doc,
+            "recommendation": rec
         }
 
     # 17. Anemia & Blood Deficiency
-    if any(w in t for w in ["anemia", "hemoglobin", "low hb", "pale", "dizzy", "fatigue", "రక్తహీనత", "ఎనీమియా", "खून की कमी"]):
-        return {
-            "ai_reply": (
+    if any(w in t for w in ["anemia", "hemoglobin", "low hb", "pale", "dizzy", "fatigue", "రక్తహీనత", "ఎనీమియా", "రక్తం తక్కువ", "హీమోగ్లోబిన్", "खून की कमी", "एनीमिया", "हीमोग्लोबिन"]):
+        if language == "te":
+            reply = (
+                "🩸 **రక్తహీనత (ఎనీమియా) విశ్లేషణ (Hematological Assessment):**\n\n"
+                "• **ప్రాథమిక సమాచారం (Basics):** రక్తంలో ఎర్ర రక్త కణాలు లేదా హీమోగ్లోబిన్ తగ్గడం వల్ల కణజాలాలకు ఆక్సిజన్ సరఫరా తగ్గి రక్తహీనత ఏర్పడుతుంది.\n"
+                "• **లక్షణాలు:** విపరీతమైన అలసట, ముఖం/కళ్ళు పాలిపోవడం, లేచినప్పుడు తలతిరగడం, చేతులు-కాళ్ళు చల్లబడటం.\n"
+                "• **ప్రాథమిక అంచనా:** ఐరన్ లోపంతో కూడిన రక్తహీనత (Iron Deficiency Anemia).\n"
+                "• **సంరక్షణ:** ఐరన్ అధికంగా ఉండే ఆహారం (పాలకూర, బీట్‌రూట్, దానిమ్మ, ఖర్జూరం, మొలకెత్తిన గింజలు) తీసుకోండి."
+            )
+            doc = "హెమటాలజిస్ట్ / జనరల్ ఫిజీషియన్ (Hematologist)"
+            rec = "కంప్లీట్ బ్లడ్ పిక్చర్ (CBP - Hemoglobin) మరియు సీరమ్ ఫెర్రిటిన్ పరీక్ష చేయించుకోండి."
+        elif language == "hi":
+            reply = (
+                "🩸 **एनीमिया (खून की कमी) मूल्यांकन (Hematological Assessment):**\n\n"
+                "• **बुनियादी जानकारी (Basics):** रक्त में हीमोग्लोबिन और लाल रक्त कोशिकाओं की कमी से शरीर में ऑक्सीजन का संचार कम हो जाता है।\n"
+                "• **प्रमुख लक्षण:** अत्यधिक थकान, त्वचा का पीला पड़ना, चक्कर आना, हाथ-पैर ठंडे रहना।\n"
+                "• **रोग भविष्यवाणी:** आयरन की कमी से होने वाला एनीमिया।\n"
+                "• **घरेलू देखभाल:** आयरन युक्त आहार (पालक, चुकंदर, अनार, खजूर, दालें) और विटामिन सी का सेवन बढ़ाएं।"
+            )
+            doc = "हेमेटोलॉजिस्ट / सामान्य चिकित्सक"
+            rec = "सीबीसी (CBC - Hemoglobin) और सीरम फेरिटिन टेस्ट करवाएं।"
+        else:
+            reply = (
                 "🩸 **Hematological & Anemia Assessment:**\n\n"
                 "• **Condition Basics:** Anemia occurs when blood lacks sufficient healthy red blood cells or hemoglobin to carry adequate oxygen throughout tissues.\n"
                 "• **Key Symptoms:** Chronic fatigue, pale skin, dizziness upon standing, cold hands and feet, and brittle nails.\n"
                 "• **Supportive Actions:** Increase iron-rich foods (spinach, beetroot, lentils, dates, pomegranate) alongside Vitamin C to enhance absorption."
-            ),
+            )
+            doc = "Hematologist / General Physician"
+            rec = "Get Complete Blood Picture (CBP), Serum Ferritin, and Iron profile."
+
+        return {
+            "ai_reply": reply,
             "is_emergency": False,
             "matched_keywords": ["Hematological", "Hemoglobin", "Iron Deficiency"],
             "detected_diseases": ["Iron Deficiency Anemia Profile"],
             "risk_level": "Moderate",
-            "doctor": "Hematologist / General Physician",
-            "recommendation": "Get Complete Blood Picture (CBP), Serum Ferritin, and Iron profile."
+            "doctor": doc,
+            "recommendation": rec
         }
 
     # 18. General Empathetic Physician Consultation
@@ -686,7 +876,8 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             f"మీరు వివరించిన లక్షణం: **\"{text}\"**\n\n"
             "• **వైద్య పరమైన సమాచారం:** ఈ లక్షణాలు శరీరంలో తాపజనక ప్రతిస్పందన, రోగనిరోధక మార్పులు లేదా అలర్జీ వల్ల సంభవించవచ్చు.\n"
             "• **ప్రాథమిక సలహా:** పుష్కలంగా నీరు త్రాగండి, విశ్రాంతి తీసుకోండి మరియు లక్షణాల తీవ్రతను గమనించండి.\n"
-            "• **ముఖ్య సూచన:** సమస్య 2-3 రోజులకు మించి కొనసాగితే లేదా ఇబ్బంది పెడుతుంటే వైద్యుడిని సంప్రదించండి."
+            "• **ముఖ్య సూచన:** సమస్య 2-3 రోజులకు మించి కొనసాగితే లేదా ఇబ్బంది పెడుతుంటే వైద్యుడిని సంప్రదించండి.\n\n"
+            "💡 *క్వాంటమ్‌మెడ్ AI సూచన:* ఖచ్చితమైన విశ్లేషణ కోసం మా **🩺 Disease Predictors** ట్యాబ్‌లోని కాలిక్యులేటర్లను కూడా ఉపయోగించవచ్చు."
         )
         doc = "జనరల్ ఫిజీషియన్ (సాధారణ వైద్యులు)"
         rec = "తగినంత విశ్రాంతి తీసుకోండి, పుష్కలంగా నీరు త్రాగండి మరియు వైద్యుడిని సంప్రదించండి."
@@ -696,7 +887,8 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
             f"आपके द्वारा बताए गए लक्षण: **\"{text}\"**\n\n"
             "• **चिकित्सीय जानकारी:** यह स्थिति शरीर की प्रतिरक्षा प्रतिक्रिया, सूजन या पर्यावरणीय संवेदनशीलता के कारण हो सकती है।\n"
             "• **प्राथमिक देखभाल:** पर्याप्त आराम करें, स्वच्छ पानी पिएं और लक्षणों की निगरानी करें।\n"
-            "• **सुझाव:** यदि समस्या बनी रहती है, तो विस्तृत जांच के लिए डॉक्टर से परामर्श लें।"
+            "• **सुझाव:** यदि समस्या बनी रहती है, तो विस्तृत जांच के लिए डॉक्टर से परामर्श लें।\n\n"
+            "💡 *क्वांटममेड AI सुझाव:* सटीक जोखिम जानने के लिए हमारे **🩺 Disease Predictors** टैब का उपयोग करें।"
         )
         doc = "सामान्य चिकित्सक (General Physician)"
         rec = "आराम करें, पानी पिएं और सामान्य चिकित्सक से परामर्श लें."
@@ -724,7 +916,6 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
         "doctor": doc,
         "recommendation": rec
     }
-
 
 
 @router.get("/status")
@@ -808,14 +999,20 @@ def analyze_symptoms(
         }
 
     t_clean = data.text.lower().strip()
+    req_lang = (data.language or "en").lower().strip()
+    if any('\u0c00' <= char <= '\u0c7f' for char in data.text):
+        req_lang = "te"
+    elif any('\u0900' <= char <= '\u097f' for char in data.text):
+        req_lang = "hi"
+
     is_greeting = bool(re.search(r'^(h+i+|h+e+y+|h+e+l+l+o+|namaste|greetings|good\s*(morning|afternoon|evening)|నమస్కారం|హలో|नमस्ते|who\s*are\s*you|what\s*is\s*your\s*name|help|start)[\s!.,?]*$', t_clean, re.IGNORECASE)) or t_clean in ["hi", "hello", "hey", "namaste", "help"]
 
-    print(f"[/symptoms START] text: '{data.text}', is_greeting: {is_greeting}")
+    print(f"[/symptoms START] text: '{data.text}', lang: '{req_lang}', is_greeting: {is_greeting}")
     import time
     _t_start = time.time()
 
     if is_greeting:
-        clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, data.language or "en")
+        clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, req_lang)
         ai_reply = clinical_res["ai_reply"]
         is_emergency = clinical_res["is_emergency"]
         matched_keywords = clinical_res["matched_keywords"]
@@ -829,7 +1026,7 @@ def analyze_symptoms(
         ai_result = analyze_with_ai(
             query_text=data.text,
             document_name=data.document_name,
-            language=data.language or "en"
+            language=req_lang
         )
         print(f"[/symptoms AI CALL DONE in {time.time() - _t_start:.3f}s, got result: {bool(ai_result)}]")
 
@@ -842,7 +1039,7 @@ def analyze_symptoms(
             doctor = ai_result.get("doctor", "General Physician")
             recommendation = ai_result.get("recommendation", "Consult a healthcare provider.")
         else:
-            clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, data.language or "en")
+            clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, req_lang)
             ai_reply = clinical_res["ai_reply"]
             is_emergency = clinical_res["is_emergency"]
             matched_keywords = clinical_res["matched_keywords"]

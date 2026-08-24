@@ -277,24 +277,47 @@ def call_openai(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[
 def analyze_with_ai(query_text: str, document_name: Optional[str] = None, language: str = "en") -> Optional[Dict[str, Any]]:
     """
     Main generative AI entrypoint.
-    Executes Groq (ultra-fast), Gemini, or OpenAI.
+    Executes Groq (ultra-fast), Gemini, or OpenAI with strict language alignment.
     """
     api_key, provider = get_api_key()
     if not api_key:
         return None
 
+    # Detect language from text if not explicitly set
+    clean_lang = (language or "en").lower().strip()
+    if any('\u0c00' <= char <= '\u0c7f' for char in query_text):
+        clean_lang = "te"
+    elif any('\u0900' <= char <= '\u097f' for char in query_text):
+        clean_lang = "hi"
+
     lang_instruction = ""
-    if language == "te":
-        lang_instruction = "\nCRITICAL: Respond COMPLETELY in warm, natural Telugu (తెలుగు భాషలో సమాధానం ఇవ్వండి)."
-    elif language == "hi":
-        lang_instruction = "\nCRITICAL: Respond COMPLETELY in warm, natural Hindi (हिंदी भाषा में उत्तर दें)."
+    if clean_lang == "te":
+        lang_instruction = (
+            "\n\n=======================================================\n"
+            "CRITICAL LANGUAGE INSTRUCTION: TELUGU (తెలుగు)\n"
+            "The patient has selected TELUGU.\n"
+            "You MUST respond 100% in natural, polite TELUGU SCRIPT (తెలుగు లిపిలో మాత్రమే సమాధానం రాయండి).\n"
+            "The values for 'ai_reply', 'doctor', and 'recommendation' MUST ALL BE IN TELUGU.\n"
+            "DO NOT OUTPUT ENGLISH.\n"
+            "======================================================="
+        )
+    elif clean_lang == "hi":
+        lang_instruction = (
+            "\n\n=======================================================\n"
+            "CRITICAL LANGUAGE INSTRUCTION: HINDI (हिंदी)\n"
+            "The patient has selected HINDI.\n"
+            "You MUST respond 100% in natural, polite HINDI DEVANAGARI SCRIPT (हिंदी लिपि में ही उत्तर दें).\n"
+            "The values for 'ai_reply', 'doctor', and 'recommendation' MUST ALL BE IN HINDI.\n"
+            "DO NOT OUTPUT ENGLISH.\n"
+            "======================================================="
+        )
     else:
-        lang_instruction = "\nRespond warmly in English."
+        lang_instruction = "\nRespond warmly and professionally in English."
 
     sys_prompt = SYSTEM_PROMPT_DOCTOR + lang_instruction
-    prompt = f"Patient says: {query_text}"
+    prompt = f"Patient inquiry: {query_text}"
     if document_name:
-        prompt += f"\nAttached document context: {document_name}"
+        prompt += f"\nAttached document name: {document_name}"
 
     if provider == "groq":
         res = call_groq(api_key, prompt, sys_prompt)

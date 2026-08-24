@@ -210,6 +210,16 @@ const HomePage = () => {
     }
   }, []);
 
+  // Update initial welcome message when switching language
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length <= 1 && (!prev[0] || prev[0].sender === 'ai')) {
+        return [{ sender: 'ai', text: t('welcome') }];
+      }
+      return prev;
+    });
+  }, [i18n.language, t]);
+
   // Handle file selection
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -347,17 +357,19 @@ const HomePage = () => {
     if (!cleanText) return;
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    const currentLang = i18n.language;
+    const currentLang = i18n.language || 'en';
     utterance.lang = currentLang === 'hi' ? 'hi-IN' : currentLang === 'te' ? 'te-IN' : 'en-US';
     
-    // Select highest quality natural voice
-    const voiceList = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
-    const matchedVoice = voiceList.find(v => v.lang.startsWith(currentLang) && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Neural') || v.name.includes('Online'))) ||
-                         voiceList.find(v => v.lang.startsWith(currentLang)) ||
+    // Select highest quality natural voice for the target language
+    const voiceList = voices.length > 0 ? voices : (window.speechSynthesis ? window.speechSynthesis.getVoices() : []);
+    const langPrefix = currentLang === 'hi' ? 'hi' : currentLang === 'te' ? 'te' : 'en';
+    
+    const matchedVoice = voiceList.find(v => (v.lang.startsWith(langPrefix) || v.lang.includes(langPrefix)) && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Neural') || v.name.includes('Online'))) ||
+                         voiceList.find(v => v.lang.startsWith(langPrefix) || v.lang.includes(langPrefix)) ||
                          voiceList[0];
     
     if (matchedVoice) utterance.voice = matchedVoice;
-    utterance.rate = 1.02;
+    utterance.rate = (currentLang === 'te' || currentLang === 'hi') ? 0.95 : 1.02;
     utterance.pitch = 1.0;
 
     utterance.onstart = () => setIsSpeaking(true);
