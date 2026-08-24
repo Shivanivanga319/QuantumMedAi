@@ -1,0 +1,18 @@
+{
+  "demo@quantummed.ai": {
+    "full_name": "Quantum Medical Demo",
+    "email": "demo@quantummed.ai",
+    "password": "$2b$12$LWpIczj2v1MgwhhyEDNCVeOXw09RP8NxLOWwDWyE6ShodofuMSxSO",
+    "gender": "Female",
+    "age": 28,
+    "phone": "9876543210"
+  },
+  "shivanivanga@gmail.com": {
+    "full_name": "Shivani Test",
+    "email": "shivanivanga@gmail.com",
+    "password": "$2b$12$eYxcKkr3afKKA54PlraOCe/HkaJAuFQnjDyT//pqxjNtLUHZiERCO",
+    "gender": "Female",
+    "age": 24,
+    "phone": "9988776655"
+  }
+}

@@ -1,4 +1,17 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && window.location.hostname ? `http://${window.location.hostname}:8000` : 'http://localhost:8000');
+const getApiBaseUrl = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+  }
+  return 'https://quantummedai.onrender.com';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 
 const getAuthHeaders = () => {
@@ -36,7 +49,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), password })
+      body: JSON.stringify({ email: (email || '').trim().toLowerCase(), password })
     });
     return handleResponse(response);
   },
@@ -46,7 +59,7 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        full_name: userData.fullName || userData.full_name,
+        full_name: (userData.fullName || userData.full_name || '').trim(),
         email: (userData.email || '').trim().toLowerCase(),
         password: userData.password,
         gender: userData.gender || null,

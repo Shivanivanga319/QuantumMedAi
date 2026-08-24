@@ -2,9 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
-from database import Base, engine
+from database import Base, engine, SessionLocal, load_users_backup, save_user_to_backup
 from models.user import User
 from models.prediction import Prediction
+from utils.security import hash_password
 from routes.auth import router as auth_router
 from routes.heart import router as heart_router
 from routes.liver import router as liver_router
@@ -15,8 +16,50 @@ from routes import kidney
 from routes import emergency
 from routes import predictions
 
-# Ensure database tables are created
-Base.metadata.create_all(bind=engine)
+# Ensure database tables are created and rehydrate users from persistent backup
+def init_db_and_seed():
+    try:
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            # Rehydrate cached users into database
+            backup_users = load_users_backup()
+            for email, data in backup_users.items():
+                clean_email = email.lower().strip()
+                existing = db.query(User).filter(User.email == clean_email).first()
+                if not existing and data.get("password"):
+                    u = User(
+                        full_name=data.get("full_name", clean_email.split("@")[0]),
+                        email=clean_email,
+                        password=data.get("password"),
+                        gender=data.get("gender"),
+                        age=data.get("age"),
+                        phone=data.get("phone")
+                    )
+                    db.add(u)
+
+            # Ensure default demo user exists for seamless evaluation
+            demo_email = "demo@quantummed.ai"
+            if not db.query(User).filter(User.email == demo_email).first():
+                demo_hash = hash_password("password123")
+                demo_user = User(
+                    full_name="Quantum Medical Demo",
+                    email=demo_email,
+                    password=demo_hash,
+                    gender="Female",
+                    age=28,
+                    phone="9876543210"
+                )
+                db.add(demo_user)
+                save_user_to_backup("Quantum Medical Demo", demo_email, demo_hash, "Female", 28, "9876543210")
+
+            db.commit()
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"Warning: Database initialization error: {e}")
+
+init_db_and_seed()
 
 app = FastAPI(
     title="QuantumMedAI API",
