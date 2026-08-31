@@ -70,25 +70,31 @@ def get_api_key() -> tuple[Optional[str], str]:
     return None, "none"
 
 
-SYSTEM_PROMPT_DOCTOR = """You are Dr. Quantum, the lead clinical AI physician for QuantumMedAI.
-You provide compassionate, medically accurate, and structured clinical assessments for patients.
+SYSTEM_PROMPT_DOCTOR = """You are Dr. Quantum, the lead clinical AI physician and medical consultant for QuantumMedAI.
+You provide compassionate, highly intelligent, medically accurate, and structured clinical assessments for patients.
 
-CRITICAL INSTRUCTIONS WHEN A PATIENT DESCRIBES SYMPTOMS OR ASKS ABOUT A DISEASE:
-1. Empathy & Disease Basics: Explain clearly what the disease or symptom cluster is, how it affects the body, and its most common causes.
-2. Clinical Prediction & Risk Stratification: Provide a thoughtful diagnostic evaluation (e.g. "Based on the symptoms described, potential conditions to consider include: ...").
-3. Specific Symptoms to Watch: Highlight hallmark symptoms and warning red flags.
-4. Actionable Home Care & Lifestyle: Recommend evidence-based supportive care (hydration, dietary guidance, rest, vitals tracking).
-5. Next Clinical Steps & Doctor Referral: Specify the exact medical specialist to consult (e.g. Cardiologist, Nephrologist, Hepatologist, Neurologist, Endocrinologist, Gynecologist, General Physician) and key diagnostic tests (e.g. Blood Panel, Ultrasound, ECG, LFT, KFT, HbA1c).
-6. QuantumMedAI Tool Integration: If the condition relates to Heart, Kidney, Liver, Stroke, PCOS, PCOD, or BMI, advise the patient to use the dedicated Disease Predictor calculator on the platform.
+CRITICAL CLINICAL PRINCIPLES:
+1. Dynamic & Conversational Tone:
+   - Address the patient's specific question or symptom directly and empathetically.
+   - If this is a follow-up or clarifying question in the conversation, maintain natural continuity and reference prior statements smoothly.
+   - Never sound robotic or generic. Avoid repeating rigid boilerplate when a direct conversational answer is needed.
+
+2. Comprehensive Clinical Reasoning:
+   - Empathy & Pathology: Explain clearly what is happening in the body and likely underlying causes in simple, reassuring language.
+   - Clinical Prediction: Offer thoughtful differential considerations (e.g. "Based on these symptoms, primary possibilities include...").
+   - Hallmark Signs & Red Flags: Highlight symptoms to monitor and when to seek urgent care.
+   - Actionable Supportive Self-Care: Give evidence-based lifestyle, hydration, dietary, and gentle relief measures.
+   - Specialist Referral & Diagnostics: Specify the exact specialist doctor to consult (e.g. Dermatologist, Cardiologist, Gastroenterologist, Endocrinologist, Neurologist, Pulmonologist, Gynecologist, General Physician) and standard lab tests to consider (e.g. CBC, Ultrasound, ECG, LFT/KFT, HbA1c, Thyroid Panel).
+   - QuantumMedAI Tools: Suggest using the platform's Disease Predictors (Heart, Kidney, Liver, Stroke, PCOS, BMI) when relevant.
 
 Always format your response as valid JSON with these exact keys:
 {
-  "ai_reply": "Your full compassionate, structured clinical explanation, disease prediction, and advice.",
+  "ai_reply": "Your full compassionate, structured clinical explanation with markdown bullet points and clear guidance.",
   "is_emergency": false,
-  "matched_keywords": ["symptoms or disease mentioned"],
-  "detected_diseases": ["Primary Suspected Disease / Condition"],
-  "risk_level": "Low" | "Moderate" | "High" | "Critical",
-  "doctor": "Recommended Specialist (e.g. Cardiologist, Nephrologist, etc.)",
+  "matched_keywords": ["symptoms or conditions mentioned"],
+  "detected_diseases": ["Primary Suspected Condition / Assessment Profile"],
+  "risk_level": "Low" | "Moderate" | "High",
+  "doctor": "Recommended Specialist (e.g. Dermatologist, Cardiologist, General Physician)",
   "recommendation": "Main takeaway health recommendation."
 }
 """
@@ -99,9 +105,9 @@ Analyze the emergency assessment answers provided for an acute patient.
 Respond in valid JSON with these exact keys:
 {
   "emergency": "Identified acute emergency condition",
-  "severity": "Critical" or "High" or "Moderate" or "Low",
+  "severity": "Critical" | "High" | "Moderate" | "Low",
   "confidence": "95%",
-  "doctor": "Emergency Specialist",
+  "doctor": "Emergency Physician",
   "first_aid": [
     "Step 1 immediate action",
     "Step 2 action",
@@ -113,18 +119,15 @@ Respond in valid JSON with these exact keys:
 
 
 def clean_human_reply(text: str) -> str:
-    """Extracts human text and strips any raw JSON syntax."""
+    """Extracts human text if raw JSON was returned as a string."""
     if not text:
         return ""
     cleaned = text.strip()
-    match = re.search(r'"ai_reply"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)', cleaned)
+    match = re.search(r'"ai_reply"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"', cleaned)
     if match:
         extracted = match.group(1).replace('\\"', '"').replace('\\n', '\n').strip()
-        if len(extracted) > 10:
+        if len(extracted) > 5:
             return extracted
-    cleaned = re.sub(r'^\s*\{\s*"ai_reply"\s*:\s*"?', '', cleaned)
-    cleaned = re.sub(r'"?\s*,\s*"(?:doctor|is_emergency|matched_keywords|detected_diseases|risk_level|recommendation)".*$', '', cleaned, flags=re.DOTALL)
-    cleaned = re.sub(r'["\}]\s*$', '', cleaned)
     return cleaned.strip()
 
 
@@ -140,32 +143,31 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
     try:
         parsed = json.loads(cleaned)
         if isinstance(parsed, dict) and "ai_reply" in parsed:
-            parsed["ai_reply"] = clean_human_reply(parsed["ai_reply"])
-        return parsed
+            return parsed
     except Exception:
-        match = re.search(r'\{.*\}', cleaned, re.DOTALL)
+        match = re.search(r'\{[\s\S]*\}', cleaned)
         if match:
             try:
                 parsed = json.loads(match.group(0))
                 if isinstance(parsed, dict) and "ai_reply" in parsed:
-                    parsed["ai_reply"] = clean_human_reply(parsed["ai_reply"])
-                return parsed
+                    return parsed
             except Exception:
                 pass
-        
-        # Fallback: if json parsing failed, extract ai_reply directly
-        extracted = clean_human_reply(cleaned)
-        if extracted and len(extracted) > 10:
-            return {
-                "ai_reply": extracted,
-                "is_emergency": False,
-                "matched_keywords": ["General Health"],
-                "detected_diseases": ["Clinical Consultation"],
-                "risk_level": "Low",
-                "doctor": "General Physician",
-                "recommendation": "Consult a healthcare provider if symptoms persist."
-            }
-        return None
+    
+    # Fallback: if json parsing failed, treat model output directly as human reply
+    human_text = clean_human_reply(cleaned)
+    if human_text and len(human_text) > 5:
+        is_em = any(w in human_text.lower() for w in ["call 108", "call 112", "immediate emergency", "emergency room", "తీవ్రమైన అత్యవసర", "आपातकालीन"])
+        return {
+            "ai_reply": human_text,
+            "is_emergency": is_em,
+            "matched_keywords": ["Clinical Assessment"],
+            "detected_diseases": ["Medical Evaluation Profile"],
+            "risk_level": "High" if is_em else "Moderate",
+            "doctor": "General Physician / Specialist",
+            "recommendation": "Consult a healthcare provider for comprehensive evaluation."
+        }
+    return None
 
 
 # Global persistent HTTP client for connection reuse with resilient timeout

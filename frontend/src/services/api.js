@@ -8,7 +8,7 @@ const getApiBaseUrl = () => {
       return 'http://localhost:8000';
     }
   }
-  return 'https://quantummedai.onrender.com';
+  return 'https://quantummedai-backend.onrender.com';
 };
 
 const API_BASE_URL = getApiBaseUrl();
