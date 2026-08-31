@@ -414,10 +414,39 @@ const HomePage = () => {
       stopSpeaking();
     }
 
+    // Auto-detect language switch requests inside text
+    let targetLang = i18n.language || 'en';
+    const lowerText = (textToSend || '').toLowerCase();
+    if (/\b(telugu|telgu|తెలుగు|telugu\s*lo|in\s*telugu)\b/i.test(lowerText) || /[\u0c00-\u0c7f]/.test(textToSend)) {
+      targetLang = 'te';
+      if (i18n.language !== 'te') {
+        i18n.changeLanguage('te');
+      }
+    } else if (/\b(hindi|हिन्दी|हिंदी|hindi\s*me|in\s*hindi)\b/i.test(lowerText) || /[\u0900-\u097f]/.test(textToSend)) {
+      targetLang = 'hi';
+      if (i18n.language !== 'hi') {
+        i18n.changeLanguage('hi');
+      }
+    } else if (/\b(in\s*english|explain\s*in\s*english)\b/i.test(lowerText)) {
+      targetLang = 'en';
+      if (i18n.language !== 'en') {
+        i18n.changeLanguage('en');
+      }
+    }
+
     const currentFile = selectedFile;
     const currentPreview = selectedFilePreview;
     const userEmail = currentUser?.email || 'guest@quantummed.ai';
     const displayMsg = textToSend.trim() || (currentFile ? `Attached: ${currentFile.name}` : '');
+
+    // Prepare multi-turn conversational history context
+    const historyPayload = messages
+      .slice(-8)
+      .filter(m => m.text && !m.text.includes('🚨 CRITICAL EMERGENCY INDICATOR DETECTED'))
+      .map(m => ({
+        sender: m.sender === 'user' ? 'user' : 'assistant',
+        text: m.text
+      }));
 
     setMessages((prev) => [
       ...prev, 
@@ -441,14 +470,16 @@ const HomePage = () => {
           document_name: currentFile ? currentFile.name : null,
           image_base64: currentPreview,
           mime_type: currentFile ? currentFile.type : 'image/jpeg',
-          language: i18n.language
+          language: targetLang,
+          history: historyPayload
         });
       } else {
         data = await api.analyzeSymptoms({
           text: textToSend || (currentFile ? `Report uploaded: ${currentFile.name}` : ''),
           user_email: userEmail,
           document_name: currentFile ? currentFile.name : null,
-          language: i18n.language
+          language: targetLang,
+          history: historyPayload
         });
       }
 

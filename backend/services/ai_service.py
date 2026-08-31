@@ -172,23 +172,35 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
 _http_client = httpx.Client(timeout=10.0, limits=httpx.Limits(max_keepalive_connections=30, max_connections=50))
 
 
-def call_cerebras(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
+def build_conversation_messages(system_prompt: str, prompt: str, history: Optional[List[dict]] = None) -> list:
+    messages = [{"role": "system", "content": system_prompt}]
+    if history and isinstance(history, list):
+        for msg in history[-8:]:
+            sender = msg.get("sender") or msg.get("role")
+            text = (msg.get("text") or msg.get("content") or "").strip()
+            if text and sender and not text.startswith("🚨 CRITICAL EMERGENCY"):
+                clean_text = clean_human_reply(text) if "ai_reply" in text else text
+                role = "user" if sender == "user" else "assistant"
+                messages.append({"role": role, "content": clean_text[:1200]})
+    messages.append({"role": "user", "content": prompt})
+    return messages
+
+
+def call_cerebras(api_key: str, prompt: str, system_prompt: str, history: Optional[List[dict]] = None) -> Optional[Dict[str, Any]]:
     """Ultra-high-speed Wafer-Scale Engine inference using Cerebras (2,000+ tokens/sec)."""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     models = ["llama-3.3-70b", "llama3.1-70b", "llama3.1-8b"]
+    messages = build_conversation_messages(system_prompt, prompt, history)
     
     for model in models:
         payload = {
             "model": model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2,
-            "max_tokens": 800
+            "messages": messages,
+            "temperature": 0.25,
+            "max_tokens": 1000
         }
         try:
             res = _http_client.post("https://api.cerebras.ai/v1/chat/completions", headers=headers, json=payload)
@@ -200,15 +212,15 @@ def call_cerebras(api_key: str, prompt: str, system_prompt: str) -> Optional[Dic
                     return parsed
                 else:
                     clean_msg = clean_human_reply(content)
-                    if clean_msg and len(clean_msg) > 10:
+                    if clean_msg and len(clean_msg) > 5:
                         return {
                             "ai_reply": clean_msg,
                             "is_emergency": False,
-                            "matched_keywords": ["Clinical inquiry"],
-                            "detected_diseases": ["Medical Consultation"],
+                            "matched_keywords": ["Clinical Consultation"],
+                            "detected_diseases": ["Medical Assessment"],
                             "risk_level": "Low",
                             "doctor": "General Physician",
-                            "recommendation": "Consult your healthcare provider if symptoms worsen."
+                            "recommendation": "Follow clinical advice and consult a physician if symptoms persist."
                         }
         except Exception as e:
             print(f"[Cerebras Error {model}]: {e}")
@@ -217,23 +229,21 @@ def call_cerebras(api_key: str, prompt: str, system_prompt: str) -> Optional[Dic
     return None
 
 
-def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
+def call_groq(api_key: str, prompt: str, system_prompt: str, history: Optional[List[dict]] = None) -> Optional[Dict[str, Any]]:
     """Instant sub-second LPU inference using Groq."""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it", "mixtral-8x7b-32768"]
+    messages = build_conversation_messages(system_prompt, prompt, history)
     
     for model in models:
         payload = {
             "model": model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2,
-            "max_tokens": 800
+            "messages": messages,
+            "temperature": 0.25,
+            "max_tokens": 1000
         }
         try:
             res = _http_client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
@@ -245,15 +255,15 @@ def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[st
                     return parsed
                 else:
                     clean_msg = clean_human_reply(content)
-                    if clean_msg and len(clean_msg) > 10:
+                    if clean_msg and len(clean_msg) > 5:
                         return {
                             "ai_reply": clean_msg,
                             "is_emergency": False,
-                            "matched_keywords": ["Clinical inquiry"],
-                            "detected_diseases": ["Medical Consultation"],
+                            "matched_keywords": ["Clinical Consultation"],
+                            "detected_diseases": ["Medical Assessment"],
                             "risk_level": "Low",
                             "doctor": "General Physician",
-                            "recommendation": "Consult your healthcare provider if symptoms worsen."
+                            "recommendation": "Follow clinical advice and consult a physician if symptoms persist."
                         }
         except Exception as e:
             print(f"[Groq Error {model}]: {e}")
@@ -262,20 +272,39 @@ def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[st
     return None
 
 
-def call_gemini(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
+def call_gemini(api_key: str, prompt: str, system_prompt: str, history: Optional[List[dict]] = None) -> Optional[Dict[str, Any]]:
     models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
-    full_prompt = f"{system_prompt}\n\nPatient Query / Input:\n{prompt}"
+    
+    # Build parts from history
+    contents = []
+    contents.append({
+        "role": "user",
+        "parts": [{"text": system_prompt}]
+    })
+    contents.append({
+        "role": "model",
+        "parts": [{"text": "Understood. I am Dr. Quantum, ready to assist."}]
+    })
+    if history and isinstance(history, list):
+        for msg in history[-6:]:
+            sender = msg.get("sender") or msg.get("role")
+            text = (msg.get("text") or msg.get("content") or "").strip()
+            if text and sender and not text.startswith("🚨 CRITICAL EMERGENCY"):
+                role = "user" if sender == "user" else "model"
+                contents.append({
+                    "role": role,
+                    "parts": [{"text": text[:1000]}]
+                })
+    contents.append({
+        "role": "user",
+        "parts": [{"text": prompt}]
+    })
+
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": full_prompt}
-                ]
-            }
-        ],
+        "contents": contents,
         "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 800
+            "temperature": 0.25,
+            "maxOutputTokens": 1000
         }
     }
 
@@ -294,8 +323,8 @@ def call_gemini(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[
                     return {
                         "ai_reply": clean_human_reply(text),
                         "is_emergency": False,
-                        "matched_keywords": ["Clinical inquiry"],
-                        "detected_diseases": ["Medical Consultation"],
+                        "matched_keywords": ["Clinical Consultation"],
+                        "detected_diseases": ["Medical Assessment"],
                         "risk_level": "Low",
                         "doctor": "General Physician",
                         "recommendation": "Consult a healthcare provider for clinical evaluation."
@@ -308,18 +337,16 @@ def call_gemini(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[
 
 
 
-def call_openai(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
+def call_openai(api_key: str, prompt: str, system_prompt: str, history: Optional[List[dict]] = None) -> Optional[Dict[str, Any]]:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
+    messages = build_conversation_messages(system_prompt, prompt, history)
     payload = {
         "model": "gpt-4o-mini",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.2
+        "messages": messages,
+        "temperature": 0.25
     }
     try:
         res = _http_client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
@@ -332,29 +359,37 @@ def call_openai(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[
     return None
 
 
-def analyze_with_ai(query_text: str, document_name: Optional[str] = None, language: str = "en") -> Optional[Dict[str, Any]]:
+def analyze_with_ai(
+    query_text: str,
+    document_name: Optional[str] = None,
+    language: str = "en",
+    history: Optional[List[dict]] = None
+) -> Optional[Dict[str, Any]]:
     """
-    Main generative AI entrypoint.
+    Main generative AI entrypoint with multi-turn conversation memory.
     Executes Cerebras (ultra-fast 2000+ tok/s), Groq, Gemini, or OpenAI with strict language alignment.
     """
     api_key, provider = get_api_key()
     if not api_key:
         return None
 
-    # Detect language from text if not explicitly set
+    # Detect language from text intent if requested in prompt
     clean_lang = (language or "en").lower().strip()
-    if any('\u0c00' <= char <= '\u0c7f' for char in query_text):
+    if re.search(r'\b(telugu|telgu|తెలుగు|telugu\s*lo|in\s*telugu)\b', query_text, re.IGNORECASE) or any('\u0c00' <= char <= '\u0c7f' for char in query_text):
         clean_lang = "te"
-    elif any('\u0900' <= char <= '\u097f' for char in query_text):
+    elif re.search(r'\b(hindi|हिन्दी|हिंदी|hindi\s*me|in\s*hindi)\b', query_text, re.IGNORECASE) or any('\u0900' <= char <= '\u097f' for char in query_text):
         clean_lang = "hi"
+    elif re.search(r'\b(in\s*english|explain\s*in\s*english)\b', query_text, re.IGNORECASE):
+        clean_lang = "en"
 
     lang_instruction = ""
     if clean_lang == "te":
         lang_instruction = (
             "\n\n=======================================================\n"
             "CRITICAL LANGUAGE INSTRUCTION: TELUGU (తెలుగు)\n"
-            "The patient has selected TELUGU.\n"
+            "The patient requested / selected TELUGU.\n"
             "You MUST respond 100% in natural, polite TELUGU SCRIPT (తెలుగు లిపిలో మాత్రమే సమాధానం రాయండి).\n"
+            "If the user asks to explain previous context in Telugu, explain the previous discussion in complete, fluent Telugu.\n"
             "The values for 'ai_reply', 'doctor', and 'recommendation' MUST ALL BE IN TELUGU.\n"
             "DO NOT OUTPUT ENGLISH.\n"
             "======================================================="
@@ -363,34 +398,35 @@ def analyze_with_ai(query_text: str, document_name: Optional[str] = None, langua
         lang_instruction = (
             "\n\n=======================================================\n"
             "CRITICAL LANGUAGE INSTRUCTION: HINDI (हिंदी)\n"
-            "The patient has selected HINDI.\n"
+            "The patient requested / selected HINDI.\n"
             "You MUST respond 100% in natural, polite HINDI DEVANAGARI SCRIPT (हिंदी लिपि में ही उत्तर दें).\n"
+            "If the user asks to explain previous context in Hindi, explain the previous discussion in complete, fluent Hindi.\n"
             "The values for 'ai_reply', 'doctor', and 'recommendation' MUST ALL BE IN HINDI.\n"
             "DO NOT OUTPUT ENGLISH.\n"
             "======================================================="
         )
     else:
-        lang_instruction = "\nRespond warmly and professionally in English."
+        lang_instruction = "\nRespond warmly, conversationally, and professionally in English."
 
     sys_prompt = SYSTEM_PROMPT_DOCTOR + lang_instruction
-    prompt = f"Patient inquiry: {query_text}"
+    prompt = f"Patient message: {query_text}"
     if document_name:
         prompt += f"\nAttached document name: {document_name}"
 
     if provider == "cerebras":
-        res = call_cerebras(api_key, prompt, sys_prompt)
+        res = call_cerebras(api_key, prompt, sys_prompt, history)
         if res:
             return res
     elif provider == "groq":
-        res = call_groq(api_key, prompt, sys_prompt)
+        res = call_groq(api_key, prompt, sys_prompt, history)
         if res:
             return res
     elif provider == "gemini":
-        res = call_gemini(api_key, prompt, sys_prompt)
+        res = call_gemini(api_key, prompt, sys_prompt, history)
         if res:
             return res
     elif provider == "openai":
-        res = call_openai(api_key, prompt, sys_prompt)
+        res = call_openai(api_key, prompt, sys_prompt, history)
         if res:
             return res
 

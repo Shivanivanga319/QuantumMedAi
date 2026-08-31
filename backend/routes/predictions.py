@@ -34,19 +34,122 @@ class SymptomAnalysisRequest(BaseModel):
     image_base64: Optional[str] = None
     mime_type: Optional[str] = "image/jpeg"
     language: Optional[str] = "en"
+    history: Optional[List[dict]] = None
 
 
-def generate_well_mannered_clinical_response(text: str, document_name: Optional[str] = None, language: str = "en") -> dict:
-    # Auto-detect language from script if not explicitly provided
-    if any('\u0c00' <= char <= '\u0c7f' for char in text):
+def generate_well_mannered_clinical_response(
+    text: str,
+    document_name: Optional[str] = None,
+    language: str = "en",
+    history: Optional[List[dict]] = None
+) -> dict:
+    t = text.lower().strip()
+
+    # 0. Language Request & Multilingual Switch Intent Detection
+    is_telugu_request = bool(re.search(r'\b(telugu|telgu|తెలుగు|telugu\s*lo|in\s*telugu)\b', t, re.IGNORECASE))
+    is_hindi_request = bool(re.search(r'\b(hindi|हिन्दी|हिंदी|hindi\s*me|in\s*hindi)\b', t, re.IGNORECASE))
+    is_english_request = bool(re.search(r'\b(english|in\s*english|explain\s*in\s*english)\b', t, re.IGNORECASE))
+
+    if is_telugu_request:
+        language = "te"
+    elif is_hindi_request:
+        language = "hi"
+    elif is_english_request:
+        language = "en"
+    elif any('\u0c00' <= char <= '\u0c7f' for char in text):
         language = "te"
     elif any('\u0900' <= char <= '\u097f' for char in text):
         language = "hi"
     else:
         language = (language or "en").lower().strip()
 
-    t = text.lower().strip()
-    
+    # 0.1 Check for pure language switch / translation requests (e.g. "explain in telugu i can't understand english")
+    is_pure_lang_switch = (
+        bool(re.search(r'^(explain|talk|speak|tell|translate|reply|give|can\s*you\s*(speak|explain|tell|reply|talk))\s*(me\s*)?(in\s*)?(telugu|hindi|english)[\s\w\',.!?]*$', t, re.IGNORECASE))
+        or any(p in t for p in ["i can't understand english", "i dont understand english", "telugu lo cheppu", "hindi me batao", "telugu please", "hindi please", "telugu", "hindi"])
+    )
+
+    if is_pure_lang_switch:
+        # Check prior conversation context in history to summarize
+        prior_context = ""
+        if history and isinstance(history, list):
+            for m in reversed(history):
+                txt = m.get("text", "")
+                if txt and len(txt) > 20 and not txt.startswith("🚨"):
+                    prior_context = txt
+                    break
+
+        if language == "te":
+            if any(k in prior_context.lower() for k in ["skin", "rash", "itch", "allergy", "eczema", "dermatitis"]):
+                reply = (
+                    "🧴 **నమస్కారం! మీ చర్మ అలర్జీ సమస్య గురించి తెలుగులో వివరిస్తున్నాను:**\n\n"
+                    "• **సమస్య విశ్లేషణ:** మీ చేతులు లేదా చర్మంపై వచ్చే దురద మరియు దద్దుర్లు సాధారణంగా కాంటాక్ట్ డెర్మటైటిస్ (సబ్బులు, డిటర్జెంట్లు లేదా రసాయనాల అలర్జీ) లేదా ఎగ్జిమా (Eczema) వల్ల వస్తాయి.\n"
+                    "• **స్వీయ సంరక్షణ సూచనలు:**\n"
+                    "  1. గోరువెచ్చని నీటితో కడగండి, ఘాటైన సబ్బులను వాడకండి.\n"
+                    "  2. రోజూ 2-3 సార్లు సెరమైడ్ మాయిశ్చరైజర్ లేదా కొబ్బరి నూనె రాయండి.\n"
+                    "  3. దురద తగ్గడానికి సెట్రిజిన్ (Cetirizine) లేదా మైల్డ్ హైడ్రోకార్టిసోన్ క్రీమ్ ఉపశమనం కలిగిస్తుంది.\n"
+                    "• **వైద్యుడి సంప్రదింపు:** సమస్య తగ్గకపోతే **డెర్మటాలజిస్ట్ (చర్మ నిపుణులు)** ను సంప్రదించండి."
+                )
+            elif any(k in prior_context.lower() for k in ["heart", "chest", "bp", "cardiac"]):
+                reply = (
+                    "🫀 **గుండె & రక్తపోటు సమస్య గురించి తెలుగులో సమాచారం:**\n\n"
+                    "• **లక్షణాలు:** ఛాతీలో బరువు, గుండె దడ, రక్తపోటు పెరగడం గుండెపై ఒత్తిడిని సూచిస్తాయి.\n"
+                    "• **సలహా:** ఉప్పు తగ్గించండి, తగినంత విశ్రాంతి తీసుకోండి మరియు వెంటనే కార్డియాలజిస్ట్‌ను సంప్రదించి ECG/బీపీ చెక్ చేయించుకోండి."
+                )
+            else:
+                reply = (
+                    "నమస్కారం! తప్పకుండా, నేను మీకు పూర్తిగా తెలుగులోనే సమాధానాలు ఇస్తాను.\n\n"
+                    "మీరు ఎదుర్కొంటున్న ఆరోగ్య సమస్య లేదా లక్షణాలు (ఉదాహరణకు: చర్మ సమస్యలు, జ్వరం, దగ్గు, కడుపు నొప్పి, గుండె దడ, కిడ్నీ లేదా ఇతర సమస్యలు) ఏమిటి? దయచేసి వివరంగా చెప్పండి, నేను మీకు తగిన వైద్య సలహా అందిస్తాను."
+                )
+            return {
+                "ai_reply": reply,
+                "is_emergency": False,
+                "matched_keywords": ["Telugu Consultation"],
+                "detected_diseases": ["Clinical Guidance (Telugu)"],
+                "risk_level": "Low",
+                "doctor": "జనరల్ ఫిజీషియన్ (General Physician)",
+                "recommendation": "మీ లక్షణాలను తెలుగులో వివరించండి."
+            }
+        elif language == "hi":
+            reply = (
+                "नमस्ते! बिल्कुल, अब मैं आपसे पूरी तरह हिंदी में ही बात करूँगा।\n\n"
+                "कृपया मुझे बताएं कि आपको क्या स्वास्थ्य समस्या या लक्षण महसूस हो रहे हैं (जैसे: त्वचा की एलर्जी, खुजली, बुखार, खांसी, पेट दर्द आदि)? मैं आपकी पूरी सहायता करूँगा।"
+            )
+            return {
+                "ai_reply": reply,
+                "is_emergency": False,
+                "matched_keywords": ["Hindi Consultation"],
+                "detected_diseases": ["Clinical Guidance (Hindi)"],
+                "risk_level": "Low",
+                "doctor": "सामान्य चिकित्सक (General Physician)",
+                "recommendation": "कृपया अपने लक्षण हिंदी में साझा करें।"
+            }
+
+    # 0.2 Gratitude & Acknowledgements
+    is_thanks = bool(re.search(r'\b(thank\s*you|thanks|thx|dhanyavadalu|dhanyavad|shukriya|understood|got\s*it|okay\s*doctor|ok\s*doctor|theek\s*hai)\b', t, re.IGNORECASE)) and not any(w in t for w in ["pain", "fever", "rash", "itching", "blood", "cough", "vomit", "dizzy"])
+    if is_thanks:
+        if language == "te":
+            reply = "మీకు స్వాగతం! ఆరోగ్యం పట్ల ఎల్లప్పుడూ జాగ్రత్తగా ఉండండి. మీకు మరేదైనా సందేహం లేదా కొత్త లక్షణాలు ఉంటే నన్ను ఎప్పుడైనా అడగవచ్చు. త్వరగా కోలుకోవాలని కోరుకుంటున్నాను!"
+            doc = "క్వాంటమ్‌మెడ్ AI కేర్"
+            rec = "తగిన విశ్రాంతి తీసుకోండి మరియు పుష్కలంగా నీరు త్రాగండి."
+        elif language == "hi":
+            reply = "आपका बहुत-बहुत स्वागत है! अपनी सेहत का ध्यान रखें। यदि आपके मन में कोई अन्य सवाल हो, तो बेझिझक पूछें। आपके शीघ्र स्वस्थ होने की कामना करते हैं!"
+            doc = "क्वांटममेड AI केयर"
+            rec = "उचित आराम करें और पानी पिएं।"
+        else:
+            reply = "You are most welcome! Take good care of your health. If you experience any new symptoms or have questions, feel free to ask anytime. Wishing you good health!"
+            doc = "QuantumMedAI Care Team"
+            rec = "Stay hydrated and rest well."
+        return {
+            "ai_reply": reply,
+            "is_emergency": False,
+            "matched_keywords": ["Acknowledgement"],
+            "detected_diseases": ["Patient Care Support"],
+            "risk_level": "Low",
+            "doctor": doc,
+            "recommendation": rec
+        }
+
     # 1. Flexible Greetings & Introductions
     is_greeting = bool(re.search(r'^(h+i+|h+e+y+|h+e+l+l+o+|namaste|greetings|good\s*(morning|afternoon|evening)|నమస్కారం|హలో|नमस्ते|who\s*are\s*you|what\s*is\s*your\s*name|help|start)[\s!.,?]*$', t, re.IGNORECASE)) or t in ["hi", "hello", "hey", "namaste", "help"]
     
@@ -1007,10 +1110,12 @@ def analyze_symptoms(
 
     t_clean = data.text.lower().strip()
     req_lang = (data.language or "en").lower().strip()
-    if any('\u0c00' <= char <= '\u0c7f' for char in data.text):
+    if re.search(r'\b(telugu|telgu|తెలుగు|telugu\s*lo|in\s*telugu)\b', t_clean, re.IGNORECASE) or any('\u0c00' <= char <= '\u0c7f' for char in data.text):
         req_lang = "te"
-    elif any('\u0900' <= char <= '\u097f' for char in data.text):
+    elif re.search(r'\b(hindi|हिन्दी|हिंदी|hindi\s*me|in\s*hindi)\b', t_clean, re.IGNORECASE) or any('\u0900' <= char <= '\u097f' for char in data.text):
         req_lang = "hi"
+    elif re.search(r'\b(in\s*english|explain\s*in\s*english)\b', t_clean, re.IGNORECASE):
+        req_lang = "en"
 
     is_greeting = bool(re.search(r'^(h+i+|h+e+y+|h+e+l+l+o+|namaste|greetings|good\s*(morning|afternoon|evening)|నమస్కారం|హలో|नमस्ते|who\s*are\s*you|what\s*is\s*your\s*name|help|start)[\s!.,?]*$', t_clean, re.IGNORECASE)) or t_clean in ["hi", "hello", "hey", "namaste", "help"]
 
@@ -1019,7 +1124,7 @@ def analyze_symptoms(
     _t_start = time.time()
 
     if is_greeting:
-        clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, req_lang)
+        clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, req_lang, history=data.history)
         ai_reply = clinical_res["ai_reply"]
         is_emergency = clinical_res["is_emergency"]
         matched_keywords = clinical_res["matched_keywords"]
@@ -1029,11 +1134,12 @@ def analyze_symptoms(
         recommendation = clinical_res["recommendation"]
         print(f"[/symptoms GREETING DONE in {time.time() - _t_start:.3f}s]")
     else:
-        # 2. Route clinical queries through AI Consultation Service (Groq / Gemini / OpenAI)
+        # 2. Route clinical queries through AI Consultation Service (Cerebras / Groq / Gemini / OpenAI)
         ai_result = analyze_with_ai(
             query_text=data.text,
             document_name=data.document_name,
-            language=req_lang
+            language=req_lang,
+            history=data.history
         )
         print(f"[/symptoms AI CALL DONE in {time.time() - _t_start:.3f}s, got result: {bool(ai_result)}]")
 
@@ -1046,7 +1152,7 @@ def analyze_symptoms(
             doctor = ai_result.get("doctor", "General Physician")
             recommendation = ai_result.get("recommendation", "Consult a healthcare provider.")
         else:
-            clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, req_lang)
+            clinical_res = generate_well_mannered_clinical_response(data.text, data.document_name, req_lang, history=data.history)
             ai_reply = clinical_res["ai_reply"]
             is_emergency = clinical_res["is_emergency"]
             matched_keywords = clinical_res["matched_keywords"]

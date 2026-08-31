@@ -201,7 +201,7 @@ export const api = {
 
 
   // AI NLP Symptom Consultation & Report Analysis
-  analyzeSymptoms: async ({ text, user_email, document_name, image_base64, mime_type, language }) => {
+  analyzeSymptoms: async ({ text, user_email, document_name, image_base64, mime_type, language, history }) => {
     const response = await fetch(`${API_BASE_URL}/predictions/symptoms`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -211,7 +211,8 @@ export const api = {
         document_name: document_name || null,
         image_base64: image_base64 || null,
         mime_type: mime_type || 'image/jpeg',
-        language: language || 'en'
+        language: language || 'en',
+        history: history || []
       })
     });
     return handleResponse(response);
