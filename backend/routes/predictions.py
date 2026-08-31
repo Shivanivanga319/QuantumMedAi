@@ -921,10 +921,17 @@ def generate_well_mannered_clinical_response(text: str, document_name: Optional[
 @router.get("/status")
 def get_ai_status():
     api_key, provider = get_api_key()
+    provider_models = {
+        "cerebras": "Cerebras CS-3 Wafer-Scale Llama-3.3-70B (~2,100 tok/s)",
+        "groq": "Groq LPU Llama-3.3-70B Versatile",
+        "gemini": "Google Gemini 2.0 Flash Multimodal",
+        "openai": "OpenAI GPT-4o-mini",
+        "none": "QuantumMedAI Clinical Neural Fallback"
+    }
     return {
         "ai_enabled": bool(api_key),
         "provider": provider,
-        "model": "Gemini Multimodal Vision & Clinical Intelligence",
+        "model": provider_models.get(provider, "QuantumMedAI Clinical Intelligence"),
         "vision_enabled": True
     }
 

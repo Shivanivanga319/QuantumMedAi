@@ -7,41 +7,14 @@ from typing import Optional, Dict, Any
 def get_api_key() -> tuple[Optional[str], str]:
     """
     Returns (api_key, provider_name).
-    Checks GROQ_API_KEY first for high-speed LPU inference.
+    Checks CEREBRAS_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY.
+    Environment variables take precedence, followed by local .env file.
     """
-    # 1. Check local .env file first
-    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-    if os.path.exists(env_path):
-        try:
-            with open(env_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-                # 1st priority: Groq Key
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("GROQ_API_KEY="):
-                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        if val and val.startswith("gsk_") and len(val) > 20:
-                            return val, "groq"
+    # 1. Check system / Render environment variables first
+    cerebras_key = os.getenv("CEREBRAS_API_KEY")
+    if cerebras_key and cerebras_key.strip() and not cerebras_key.startswith("your_") and len(cerebras_key.strip()) > 15:
+        return cerebras_key.strip(), "cerebras"
 
-                # 2nd priority: Gemini Key
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("GEMINI_API_KEY="):
-                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        if val and not val.startswith("your_") and len(val) > 20:
-                            return val, "gemini"
-
-                # 3rd priority: OpenAI Key
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("OPENAI_API_KEY="):
-                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        if val and not val.startswith("your_") and len(val) > 20:
-                            return val, "openai"
-        except Exception as e:
-            print(f"Error reading .env: {e}")
-
-    # 2. Environment variables
     groq_key = os.getenv("GROQ_API_KEY")
     if groq_key and groq_key.startswith("gsk_"):
         return groq_key.strip(), "groq"
@@ -53,6 +26,46 @@ def get_api_key() -> tuple[Optional[str], str]:
     openai_key = os.getenv("OPENAI_API_KEY")
     if openai_key and openai_key.strip() and not openai_key.startswith("your_"):
         return openai_key.strip(), "openai"
+
+    # 2. Check local .env file
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                # 1st priority: Cerebras Key
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("CEREBRAS_API_KEY="):
+                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        if val and not val.startswith("your_") and len(val) > 15:
+                            return val, "cerebras"
+
+                # 2nd priority: Groq Key
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("GROQ_API_KEY="):
+                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        if val and val.startswith("gsk_") and len(val) > 20:
+                            return val, "groq"
+
+                # 3rd priority: Gemini Key
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("GEMINI_API_KEY="):
+                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        if val and not val.startswith("your_") and len(val) > 20:
+                            return val, "gemini"
+
+                # 4th priority: OpenAI Key
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("OPENAI_API_KEY="):
+                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        if val and not val.startswith("your_") and len(val) > 20:
+                            return val, "openai"
+        except Exception as e:
+            print(f"Error reading .env: {e}")
 
     return None, "none"
 
@@ -157,6 +170,51 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
 
 # Global persistent HTTP client for connection reuse with resilient timeout
 _http_client = httpx.Client(timeout=10.0, limits=httpx.Limits(max_keepalive_connections=30, max_connections=50))
+
+
+def call_cerebras(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
+    """Ultra-high-speed Wafer-Scale Engine inference using Cerebras (2,000+ tokens/sec)."""
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    models = ["llama-3.3-70b", "llama3.1-70b", "llama3.1-8b"]
+    
+    for model in models:
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.2,
+            "max_tokens": 800
+        }
+        try:
+            res = _http_client.post("https://api.cerebras.ai/v1/chat/completions", headers=headers, json=payload)
+            if res.status_code == 200:
+                data = res.json()
+                content = data["choices"][0]["message"]["content"]
+                parsed = extract_json(content)
+                if parsed and ("ai_reply" in parsed or "emergency" in parsed):
+                    return parsed
+                else:
+                    clean_msg = clean_human_reply(content)
+                    if clean_msg and len(clean_msg) > 10:
+                        return {
+                            "ai_reply": clean_msg,
+                            "is_emergency": False,
+                            "matched_keywords": ["Clinical inquiry"],
+                            "detected_diseases": ["Medical Consultation"],
+                            "risk_level": "Low",
+                            "doctor": "General Physician",
+                            "recommendation": "Consult your healthcare provider if symptoms worsen."
+                        }
+        except Exception as e:
+            print(f"[Cerebras Error {model}]: {e}")
+            continue
+
+    return None
 
 
 def call_groq(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[str, Any]]:
@@ -277,7 +335,7 @@ def call_openai(api_key: str, prompt: str, system_prompt: str) -> Optional[Dict[
 def analyze_with_ai(query_text: str, document_name: Optional[str] = None, language: str = "en") -> Optional[Dict[str, Any]]:
     """
     Main generative AI entrypoint.
-    Executes Groq (ultra-fast), Gemini, or OpenAI with strict language alignment.
+    Executes Cerebras (ultra-fast 2000+ tok/s), Groq, Gemini, or OpenAI with strict language alignment.
     """
     api_key, provider = get_api_key()
     if not api_key:
@@ -319,7 +377,11 @@ def analyze_with_ai(query_text: str, document_name: Optional[str] = None, langua
     if document_name:
         prompt += f"\nAttached document name: {document_name}"
 
-    if provider == "groq":
+    if provider == "cerebras":
+        res = call_cerebras(api_key, prompt, sys_prompt)
+        if res:
+            return res
+    elif provider == "groq":
         res = call_groq(api_key, prompt, sys_prompt)
         if res:
             return res
@@ -337,14 +399,18 @@ def analyze_with_ai(query_text: str, document_name: Optional[str] = None, langua
 
 def emergency_with_ai(data: dict) -> Optional[Dict[str, Any]]:
     """
-    Emergency assessment using Groq, Gemini, or OpenAI.
+    Emergency assessment using Cerebras, Groq, Gemini, or OpenAI.
     """
     api_key, provider = get_api_key()
     if not api_key:
         return None
 
     prompt = f"Emergency Assessment Parameters:\n{json.dumps(data, indent=2)}"
-    if provider == "groq":
+    if provider == "cerebras":
+        res = call_cerebras(api_key, prompt, SYSTEM_PROMPT_EMERGENCY)
+        if res:
+            return res
+    elif provider == "groq":
         res = call_groq(api_key, prompt, SYSTEM_PROMPT_EMERGENCY)
         if res:
             return res
