@@ -4,69 +4,57 @@ import re
 import httpx
 from typing import Optional, Dict, Any
 
-def get_api_key() -> tuple[Optional[str], str]:
+def get_all_api_keys() -> Dict[str, str]:
     """
-    Returns (api_key, provider_name).
-    Checks CEREBRAS_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY.
+    Returns a dictionary of all configured API keys:
+    {'gemini': '...', 'cerebras': '...', 'groq': '...', 'openai': '...'}
     Environment variables take precedence, followed by local .env file.
     """
+    keys = {}
+    
     # 1. Check system / Render environment variables first
-    cerebras_key = os.getenv("CEREBRAS_API_KEY")
-    if cerebras_key and cerebras_key.strip() and not cerebras_key.startswith("your_") and len(cerebras_key.strip()) > 15:
-        return cerebras_key.strip(), "cerebras"
-
-    groq_key = os.getenv("GROQ_API_KEY")
-    if groq_key and groq_key.startswith("gsk_"):
-        return groq_key.strip(), "groq"
-
-    gemini_key = os.getenv("GEMINI_API_KEY")
-    if gemini_key and gemini_key.strip() and not gemini_key.startswith("your_") and len(gemini_key) > 20:
-        return gemini_key.strip(), "gemini"
-
-    openai_key = os.getenv("OPENAI_API_KEY")
-    if openai_key and openai_key.strip() and not openai_key.startswith("your_"):
-        return openai_key.strip(), "openai"
+    for env_var, prov in [
+        ("GEMINI_API_KEY", "gemini"),
+        ("CEREBRAS_API_KEY", "cerebras"),
+        ("GROQ_API_KEY", "groq"),
+        ("OPENAI_API_KEY", "openai")
+    ]:
+        val = os.getenv(env_var)
+        if val and val.strip() and not val.startswith("your_") and len(val.strip()) > 15:
+            keys[prov] = val.strip()
 
     # 2. Check local .env file
     env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
     if os.path.exists(env_path):
         try:
             with open(env_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-                # 1st priority: Cerebras Key
-                for line in lines:
+                for line in f:
                     line = line.strip()
-                    if line.startswith("CEREBRAS_API_KEY="):
-                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        if val and not val.startswith("your_") and len(val) > 15:
-                            return val, "cerebras"
-
-                # 2nd priority: Groq Key
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("GROQ_API_KEY="):
-                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        if val and val.startswith("gsk_") and len(val) > 20:
-                            return val, "groq"
-
-                # 3rd priority: Gemini Key
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("GEMINI_API_KEY="):
-                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        if val and not val.startswith("your_") and len(val) > 20:
-                            return val, "gemini"
-
-                # 4th priority: OpenAI Key
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("OPENAI_API_KEY="):
-                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        if val and not val.startswith("your_") and len(val) > 20:
-                            return val, "openai"
+                    for env_var, prov in [
+                        ("GEMINI_API_KEY", "gemini"),
+                        ("CEREBRAS_API_KEY", "cerebras"),
+                        ("GROQ_API_KEY", "groq"),
+                        ("OPENAI_API_KEY", "openai")
+                    ]:
+                        if line.startswith(f"{env_var}="):
+                            val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                            if val and not val.startswith("your_") and len(val) > 15 and prov not in keys:
+                                keys[prov] = val
         except Exception as e:
             print(f"Error reading .env: {e}")
 
+    return keys
+
+
+def get_api_key() -> tuple[Optional[str], str]:
+    """
+    Returns (api_key, provider_name).
+    Prioritizes Gemini -> Cerebras -> Groq -> OpenAI.
+    """
+    keys = get_all_api_keys()
+    for prov in ["gemini", "cerebras", "groq", "openai"]:
+        if prov in keys:
+            return keys[prov], prov
     return None, "none"
 
 
@@ -85,7 +73,14 @@ CRITICAL INSTRUCTIONS:
    - Care & Relief: 2-3 brief bullet points for immediate safe home care / lifestyle relief.
    - Next Step: 1 sentence specifying the specialist to consult and recommended test.
 
-3. ZERO EMOJIS:
+3. LAB & BLOOD REPORT CLINICAL EVALUATION:
+   - When the patient provides blood test values or a lab report (e.g. Hemoglobin, Platelets, WBC, ESR, Blood Sugar, HbA1c, Bilirubin, SGPT/ALT, SGOT/AST, Creatinine, Urea, Lipid Profile/Cholesterol, Thyroid/TSH):
+   - Explicitly evaluate each reported number against standard clinical reference ranges (classify as Low, Normal, or High).
+   - In Assessment, state what these abnormal biomarkers signify (e.g. anemia, acute infection, hepatic inflammation, renal strain, dyslipidemia).
+   - In Care & Relief, provide targeted dietary, hydration, or lifestyle guidance.
+   - In Next Step, identify the exact medical specialist (Hematologist, Nephrologist, Gastroenterologist, Endocrinologist) and confirmatory tests.
+
+4. ZERO EMOJIS:
    - Do NOT use any emojis in your response. Keep the tone completely clean, clinical, and professional.
 
 Always format your response as valid JSON with these exact keys:
@@ -276,7 +271,14 @@ def call_groq(api_key: str, prompt: str, system_prompt: str, history: Optional[L
 
 
 def call_gemini(api_key: str, prompt: str, system_prompt: str, history: Optional[List[dict]] = None) -> Optional[Dict[str, Any]]:
-    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    models_to_try = [
+        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-3.7-flash",
+        "gemini-flash-latest"
+    ]
     
     # Build parts from history
     contents = []
@@ -370,10 +372,10 @@ def analyze_with_ai(
 ) -> Optional[Dict[str, Any]]:
     """
     Main generative AI entrypoint with multi-turn conversation memory.
-    Executes Cerebras (ultra-fast 2000+ tok/s), Groq, Gemini, or OpenAI with strict language alignment.
+    Executes Gemini, Cerebras, Groq, or OpenAI with resilient multi-provider fallback and language alignment.
     """
-    api_key, provider = get_api_key()
-    if not api_key:
+    keys = get_all_api_keys()
+    if not keys:
         return None
 
     # Detect language from text intent if requested in prompt
@@ -416,22 +418,26 @@ def analyze_with_ai(
     if document_name:
         prompt += f"\nAttached document name: {document_name}"
 
-    if provider == "cerebras":
-        res = call_cerebras(api_key, prompt, sys_prompt, history)
-        if res:
-            return res
-    elif provider == "groq":
-        res = call_groq(api_key, prompt, sys_prompt, history)
-        if res:
-            return res
-    elif provider == "gemini":
-        res = call_gemini(api_key, prompt, sys_prompt, history)
-        if res:
-            return res
-    elif provider == "openai":
-        res = call_openai(api_key, prompt, sys_prompt, history)
-        if res:
-            return res
+    # Resilient multi-provider execution chain: Gemini -> Cerebras -> Groq -> OpenAI
+    provider_order = ["gemini", "cerebras", "groq", "openai"]
+    for prov in provider_order:
+        if prov in keys:
+            api_key = keys[prov]
+            try:
+                res = None
+                if prov == "gemini":
+                    res = call_gemini(api_key, prompt, sys_prompt, history)
+                elif prov == "cerebras":
+                    res = call_cerebras(api_key, prompt, sys_prompt, history)
+                elif prov == "groq":
+                    res = call_groq(api_key, prompt, sys_prompt, history)
+                elif prov == "openai":
+                    res = call_openai(api_key, prompt, sys_prompt, history)
+                if res and (res.get("ai_reply") or res.get("emergency")):
+                    return res
+            except Exception as e:
+                print(f"[Provider {prov} failed]: {e}")
+                continue
 
     return None
 

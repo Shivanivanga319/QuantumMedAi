@@ -755,7 +755,7 @@ const HomePage = () => {
                   {/* Vision Data Breakdown: Prescriptions */}
                   {msg.visionData?.prescriptions?.length > 0 && (
                     <div style={{ marginTop: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}> Extracted Prescribed Medications:</strong>
+                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}>Extracted Prescribed Medications:</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
                         {msg.visionData.prescriptions.map((rx, rIdx) => (
                           <div key={rIdx} style={{ background: 'white', padding: '8px 10px', borderRadius: '6px', fontSize: '0.82rem', border: '1px solid #e2e8f0' }}>
@@ -770,15 +770,16 @@ const HomePage = () => {
                   {/* Vision Data Breakdown: Lab Biomarkers */}
                   {msg.visionData?.lab_biomarkers?.length > 0 && (
                     <div style={{ marginTop: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}> Clinical Laboratory Biomarkers:</strong>
+                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}>Clinical Laboratory Biomarkers:</strong>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginTop: '6px' }}>
                         {msg.visionData.lab_biomarkers.map((bio, bIdx) => (
-                          <div key={bIdx} style={{ background: 'white', padding: '6px 8px', borderRadius: '6px', fontSize: '0.8rem', border: '1px solid #e2e8f0' }}>
+                          <div key={bIdx} style={{ background: 'white', padding: '8px 10px', borderRadius: '6px', fontSize: '0.8rem', border: '1px solid #e2e8f0' }}>
                             <div style={{ color: '#334155', fontWeight: 'bold' }}>{bio.parameter}</div>
                             <div style={{ fontSize: '0.95rem', fontWeight: 800, color: bio.status === 'High' ? '#b91c1c' : bio.status === 'Low' ? '#b45309' : '#15803d' }}>
                               {bio.value} {bio.unit}
                             </div>
-                            <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Ref: {bio.reference_range} ({bio.status})</div>
+                            <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Ref: {bio.reference_range} ({bio.status})</div>
+                            {bio.interpretation && <div style={{ fontSize: '0.70rem', color: '#94a3b8', marginTop: '2px' }}>{bio.interpretation}</div>}
                           </div>
                         ))}
                       </div>
@@ -788,13 +789,13 @@ const HomePage = () => {
                   {/* Vision Data Breakdown: Abnormal Findings */}
                   {msg.visionData?.abnormal_findings?.length > 0 && (
                     <div style={{ marginTop: '10px', background: '#fee2e2', padding: '8px 12px', borderRadius: '6px', fontSize: '0.82rem', color: '#991b1b' }}>
-                      <strong>️ Notable Out-of-Range Markers:</strong> {msg.visionData.abnormal_findings.join(', ')}
+                      <strong>Notable Out-of-Range Markers:</strong> {msg.visionData.abnormal_findings.join(', ')}
                     </div>
                   )}
 
                   {msg.doctor && (
                     <div style={{ fontSize: '0.8rem', marginTop: '8px', fontWeight: 'bold', opacity: 0.9 }}>
-                      ‍️ Specialist: {msg.doctor} {msg.risk && `(${msg.risk} Risk)`}
+                      Specialist: {msg.doctor} {msg.risk && `(${msg.risk} Risk)`}
                     </div>
                   )}
 

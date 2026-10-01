@@ -217,6 +217,60 @@ def generate_well_mannered_clinical_response(
                 "recommendation": rec
             }
 
+    # 2.1 Direct Blood Report & Clinical Biomarker Evaluation
+    from services.vision_service import parse_blood_biomarkers_from_text
+    extracted_biomarkers, abnormal_findings = parse_blood_biomarkers_from_text(t)
+    if extracted_biomarkers:
+        abn_text = ", ".join(abnormal_findings) if abnormal_findings else "All detected parameters are within normal baseline intervals."
+        if language == "te":
+            reply = (
+                f"**రక్త పరీక్ష నివేదిక విశ్లేషణ (Blood Report Assessment):**\n\n"
+                f"- **విశ్లేషణ:** మీ రక్త పరీక్షలో {len(extracted_biomarkers)} బయోమార్కర్లు విశ్లేషించబడ్డాయి. {abn_text}\n"
+                "- **స్వీయ సంరక్షణ:** తగినంత నీరు త్రాగండి, సమతుల్య పౌష్టికాహారం తీసుకోండి మరియు మీ జీవనశైలిని మెరుగుపరచుకోండి.\n"
+                "- **తదుపరి అడుగు:** సమగ్ర విశ్లేషణ కోసం ఈ నివేదికను జనరల్ ఫిజీషియన్ లేదా సంబంధిత నిపుణుడికి చూపించండి."
+            )
+            doc = "జనరల్ ఫిజీషియన్ / పాథాలజిస్ట్ (General Physician / Pathologist)"
+            rec = "పూర్తి నివేదికతో వైద్యుడిని సంప్రదించండి."
+        elif language == "hi":
+            reply = (
+                f"**ब्लड टेस्ट रिपोर्ट मूल्यांकन (Blood Report Assessment):**\n\n"
+                f"- **मूल्यांकन:** आपकी रक्त रिपोर्ट में {len(extracted_biomarkers)} बायोमार्कर विश्लेषित किए गए। {abn_text}\n"
+                "- **घरेलू देखभाल:** संतुलित आहार लें, पर्याप्त पानी पिएं और दिनचर्या स्वस्थ रखें।\n"
+                "- **अगला कदम:** सटीक परामर्श के लिए इन परिणामों को अपने डॉक्टर को दिखाएं।"
+            )
+            doc = "जनरल फिजिशियन / पैथोलॉजिस्ट"
+            rec = "पूरी रिपोर्ट के साथ डॉक्टर से सलाह लें।"
+        else:
+            reply = (
+                f"**Blood Test Report Evaluation:**\n\n"
+                f"- **Assessment:** Evaluated {len(extracted_biomarkers)} laboratory biomarker(s). {abn_text}\n"
+                "- **Care & Relief:** Maintain balanced hydration and adopt nutritional adjustments matching flagged biomarkers.\n"
+                "- **Next Step:** Review these lab results with a General Physician or specialist for clinical correlation."
+            )
+            doc = "General Physician / Pathologist"
+            rec = "Consult your physician with your laboratory report for clinical correlation."
+
+        return {
+            "ai_reply": reply,
+            "is_emergency": any("critical" in a.lower() for a in abnormal_findings),
+            "matched_keywords": [b["parameter"] for b in extracted_biomarkers],
+            "detected_diseases": ["Clinical Laboratory Biomarker Evaluation"],
+            "risk_level": "High" if len(abnormal_findings) >= 2 else "Moderate" if abnormal_findings else "Low",
+            "doctor": doc,
+            "recommendation": rec,
+            "vision_data": {
+                "document_type": "Lab Report",
+                "document_title": "Laboratory Blood Test Report",
+                "ai_reply": reply,
+                "is_emergency": False,
+                "risk_level": "Moderate" if abnormal_findings else "Low",
+                "doctor": doc,
+                "lab_biomarkers": extracted_biomarkers,
+                "abnormal_findings": abnormal_findings,
+                "recommendations": [rec]
+            }
+        }
+
     # 3. Childhood-Onset / Lifelong / Chronic Conditions (e.g. "from my childhood what it can be", "since childhood")
     if any(w in t for w in ["childhood", "from childhood", "from my childhood", "since childhood", "since birth", "born with", "since i was a kid", "since a child", "lifelong", "long standing", "చిన్నప్పటి నుండి", "బాల్యం", "बचपन से"]):
         if language == "te":
@@ -1179,6 +1233,12 @@ def analyze_symptoms(
     print(f"[/symptoms DB DONE in {time.time() - _t_db:.3f}s | TOTAL: {time.time() - _t_start:.3f}s]")
 
 
+    vision_payload = None
+    if "vision_result" in locals() and vision_result:
+        vision_payload = vision_result
+    elif "clinical_res" in locals() and clinical_res and clinical_res.get("vision_data"):
+        vision_payload = clinical_res.get("vision_data")
+
     return {
         "status": "success",
         "ai_reply": ai_reply,
@@ -1187,7 +1247,8 @@ def analyze_symptoms(
         "detected_diseases": detected_diseases,
         "risk_level": risk_level,
         "doctor": doctor,
-        "recommendation": recommendation
+        "recommendation": recommendation,
+        "vision_data": vision_payload
     }
 
 

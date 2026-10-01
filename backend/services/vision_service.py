@@ -5,53 +5,121 @@ import re
 import httpx
 from typing import Optional, Dict, Any, List
 
-from services.ai_service import get_api_key, extract_json
+from services.ai_service import get_all_api_keys, extract_json
 
 SYSTEM_PROMPT_VISION = """You are QuantumMed AI's Expert Medical Vision & Document Analysis Intelligence.
 You specialize in reading, transcribing, and clinically analyzing:
-1. Handwritten and printed Doctor Prescriptions.
-2. Clinical Pathology & Laboratory Test Reports (Blood, Urine, Lipid, Liver, Kidney, Thyroid, Hormone, HbA1c panels).
+1. Clinical Pathology & Laboratory Test Reports (Complete Blood Count / CBC, Liver Function Tests / LFT, Kidney Function Tests / KFT / RFT, Lipid Profile, Thyroid Panel, Blood Glucose / HbA1c, Urine Routine, Serum Electrolytes).
+2. Handwritten and printed Doctor Prescriptions.
 3. Hospital Discharge Summaries, Radiology / Ultrasound / Scan reports, and Clinical Notes.
 
-Analyze the provided medical image thoroughly and provide a structured clinical extraction.
+CRITICAL CLINICAL EXTRACTION GUIDELINES FOR LAB & BLOOD REPORTS:
+1. ACCURATE BIOMARKER EXTRACTION:
+   - Carefully read every biomarker line item in the report.
+   - Extract the exact test parameter name (e.g. Hemoglobin, Total Leukocyte Count / WBC, Platelet Count, Serum Creatinine, Blood Urea, Total Bilirubin, Direct Bilirubin, SGPT/ALT, SGOT/AST, Fasting Blood Sugar, HbA1c, Total Cholesterol, HDL, LDL, Triglycerides).
+   - Extract the exact observed numerical value.
+   - Extract the exact unit (g/dL, mg/dL, /mcL, U/L, %, mEq/L) and reference range printed on the report.
+   - Accurately determine the status: "High", "Low", or "Normal".
+   - Provide a concise 1-sentence interpretation for the parameter.
+
+2. ABNORMAL FINDINGS & IMPLICATIONS:
+   - In "abnormal_findings", list every single out-of-range parameter with its value, status, and clinical meaning (e.g. "Low Hemoglobin (9.8 g/dL) - Indicates microcytic/normocytic anemia", "Elevated Serum Creatinine (1.6 mg/dL) - Suggests compromised renal clearance").
+
+3. CLINICAL SUMMARY (ai_reply):
+   - Provide a structured 3-part clinical summary:
+     * Assessment: 1-2 sentences summarizing the test type and primary findings (e.g. mild anemia, hepatic inflammation, or normal metabolic profile).
+     * Care & Relief: 2-3 brief practical bullet points for diet, hydration, or lifestyle.
+     * Next Step: 1 sentence specifying the exact medical specialist to consult (Hematologist, Nephrologist, Gastroenterologist, Endocrinologist, or General Physician) and any follow-up tests.
+   - Keep the reply concise, empathetic, and clear.
+   - ZERO EMOJIS: Do not output any emojis in any field.
 
 Respond strictly in valid JSON with these exact keys:
 {
-  "document_type": "Prescription" | "Lab Report" | "Hospital Document" | "Medical Scan" | "General Medical Image",
-  "document_title": "e.g. Complete Blood Count Report / Outpatient Prescription / Liver Function Test",
-  "ai_reply": "A detailed, empathetic, and clear explanation of the findings in the document, explaining all medical terms in simple language for the patient.",
+  "document_type": "Lab Report" | "Prescription" | "Hospital Document" | "Medical Scan" | "General Medical Image",
+  "document_title": "e.g. Complete Blood Count & Renal Function Report",
+  "ai_reply": "Concise, structured 3-part clinical evaluation without emojis.",
   "is_emergency": false,
   "risk_level": "Low" | "Moderate" | "High" | "Critical",
-  "doctor": "Recommended Medical Specialist to follow up with",
+  "doctor": "Recommended Medical Specialist",
   "prescriptions": [
     {
-      "medicine_name": "Name of medicine (e.g., Amoxicillin, Metformin)",
-      "dosage": "e.g., 500mg",
-      "frequency": "e.g., Twice daily (1-0-1)",
-      "timing": "e.g., After food",
-      "duration": "e.g., 5 days",
-      "purpose": "e.g., Bacterial infection / Blood sugar control"
+      "medicine_name": "Medicine Name",
+      "dosage": "e.g. 500mg",
+      "frequency": "e.g. Twice daily",
+      "timing": "e.g. After meals",
+      "duration": "e.g. 5 days",
+      "purpose": "Therapeutic indication"
     }
   ],
   "lab_biomarkers": [
     {
-      "parameter": "e.g. Hemoglobin / Serum Creatinine / Total Cholesterol",
-      "value": "e.g. 11.2",
-      "unit": "e.g. g/dL or mg/dL",
-      "reference_range": "e.g. 13.5 - 17.5",
-      "status": "Normal" | "High" | "Low",
-      "interpretation": "Brief clinical meaning"
+      "parameter": "e.g. Hemoglobin",
+      "value": "e.g. 9.8",
+      "unit": "g/dL",
+      "reference_range": "13.0 - 17.0",
+      "status": "Low",
+      "interpretation": "Subnormal oxygen-carrying capacity, consistent with anemia"
     }
   ],
   "abnormal_findings": [
-    "List of critical or out-of-range parameters identified"
+    "List of all out-of-range parameters"
   ],
   "recommendations": [
-    "Key actionable healthcare next steps for the patient"
+    "Key actionable clinical next steps"
   ]
 }
 Only return valid JSON.
 """
+
+
+def parse_blood_biomarkers_from_text(text: str) -> tuple[List[Dict[str, str]], List[str]]:
+    """
+    Deterministic clinical regex biomarker extractor for laboratory values.
+    Used for local evaluation and resilient fallback.
+    """
+    biomarkers = []
+    abnormal = []
+    
+    patterns = [
+        (r'\b(hb|hemoglobin|haemoglobin)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'Hemoglobin', 'g/dL', 12.0, 17.0, 'Low indicates anemia; high indicates erythrocytosis'),
+        (r'\b(creatinine|serum creatinine)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'Serum Creatinine', 'mg/dL', 0.6, 1.2, 'Elevated suggests reduced renal filtration'),
+        (r'\b(total bilirubin|bilirubin)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'Total Bilirubin', 'mg/dL', 0.2, 1.2, 'Elevated points towards jaundice or liver clearance issue'),
+        (r'\b(sgpt|alt)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'SGPT / ALT', 'U/L', 7.0, 56.0, 'Elevated suggests hepatic cellular inflammation'),
+        (r'\b(sgot|ast)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'SGOT / AST', 'U/L', 10.0, 40.0, 'Elevated reflects liver or muscle enzyme release'),
+        (r'\b(platelet[s]?|platelet count)\b[:=\s]*([0-9]+(?:,[0-9]+)?)', 'Platelet Count', '/mcL', 150000, 450000, 'Low indicates thrombocytopenia; normal clotting requires >150k'),
+        (r'\b(wbc|tlc|white blood cell[s]?)\b[:=\s]*([0-9]+(?:,[0-9]+)?)', 'Total WBC Count', '/mcL', 4000, 11000, 'Elevated suggests infection or inflammatory response'),
+        (r'\b(blood urea|urea|bun)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'Blood Urea', 'mg/dL', 15.0, 40.0, 'Elevated suggests dehydration or decreased renal clearance'),
+        (r'\b(hba1c)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'HbA1c', '%', 4.0, 5.7, 'Levels >5.7% indicate prediabetes; >6.5% indicate diabetes'),
+        (r'\b(fasting sugar|fbs|fasting glucose|glucose)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'Fasting Blood Glucose', 'mg/dL', 70.0, 100.0, 'Elevated indicates impaired glycemic control'),
+        (r'\b(cholesterol|total cholesterol)\b[:=\s]*([0-9]+(?:\.[0-9]+)?)', 'Total Cholesterol', 'mg/dL', 125.0, 200.0, 'Elevated increases cardiovascular plaque risk')
+    ]
+    
+    t_lower = text.lower()
+    for regex, name, unit, min_val, max_val, meaning in patterns:
+        m = re.search(regex, t_lower)
+        if m:
+            val_str = m.group(2).replace(',', '')
+            try:
+                val = float(val_str)
+                if val < min_val:
+                    status = 'Low'
+                    abnormal.append(f"Low {name} ({val} {unit})")
+                elif val > max_val:
+                    status = 'High'
+                    abnormal.append(f"Elevated {name} ({val} {unit})")
+                else:
+                    status = 'Normal'
+                biomarkers.append({
+                    'parameter': name,
+                    'value': str(val),
+                    'unit': unit,
+                    'reference_range': f"{min_val} - {max_val}",
+                    'status': status,
+                    'interpretation': meaning
+                })
+            except Exception:
+                pass
+    return biomarkers, abnormal
 
 
 def analyze_medical_image_with_ai(
@@ -62,27 +130,36 @@ def analyze_medical_image_with_ai(
 ) -> Optional[Dict[str, Any]]:
     """
     Calls Gemini Vision or OpenAI Vision to perform medical OCR and clinical document interpretation.
+    Prioritizes Gemini Vision for multimodal document reading and biomarker extraction.
     """
-    api_key, provider = get_api_key()
-    if not api_key:
+    all_keys = get_all_api_keys()
+    if not all_keys:
         return None
 
     # Clean base64 header if included
     if "," in image_base64:
         image_base64 = image_base64.split(",", 1)[1]
 
-    prompt_text = f"Analyze this medical image / document carefully. Language preference: {language}."
+    prompt_text = (
+        f"Analyze this medical image / document carefully. "
+        f"Transcribe and evaluate all blood report biomarkers, units, reference intervals, or prescription medications. "
+        f"Language preference: {language}."
+    )
     if user_query and user_query.strip():
-        prompt_text += f"\nPatient specific question: {user_query.strip()}"
+        prompt_text += f"\nPatient specific question/context: {user_query.strip()}"
 
-    if provider == "gemini":
-        models_to_try = [
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
+    # 1. Primary Vision Provider: Gemini Vision (Top capability for clinical pathology OCR)
+    if "gemini" in all_keys:
+        gemini_key = all_keys["gemini"]
+        gemini_models = [
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemini-2.5-flash-lite",
+            "gemini-3.5-flash",
             "gemini-3.7-flash",
             "gemini-flash-latest"
         ]
-        
+
         payload = {
             "contents": [
                 {
@@ -90,7 +167,7 @@ def analyze_medical_image_with_ai(
                         {"text": f"{SYSTEM_PROMPT_VISION}\n\n{prompt_text}"},
                         {
                             "inline_data": {
-                                "mime_type": mime_type,
+                                "mime_type": mime_type or "image/jpeg",
                                 "data": image_base64
                             }
                         }
@@ -104,10 +181,10 @@ def analyze_medical_image_with_ai(
         }
 
         try:
-            with httpx.Client(timeout=10.0) as client:
-                for model in models_to_try:
+            with httpx.Client(timeout=25.0) as client:
+                for model in gemini_models:
                     try:
-                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
                         res = client.post(url, json=payload)
                         if res.status_code == 200:
                             data = res.json()
@@ -115,16 +192,19 @@ def analyze_medical_image_with_ai(
                             if candidates:
                                 text = candidates[0]["content"]["parts"][0]["text"]
                                 parsed = extract_json(text)
-                                if parsed:
+                                if parsed and isinstance(parsed, dict):
                                     return parsed
-                    except Exception:
+                    except Exception as model_err:
+                        print(f"[Gemini Vision Model {model} Error]: {model_err}")
                         continue
         except Exception as e:
             print(f"[Vision AI Gemini Error]: {e}")
 
-    elif provider == "openai":
+    # 2. Secondary Vision Provider: OpenAI GPT-4o-mini
+    if "openai" in all_keys:
+        openai_key = all_keys["openai"]
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {openai_key}",
             "Content-Type": "application/json"
         }
         payload = {
@@ -149,13 +229,13 @@ def analyze_medical_image_with_ai(
         }
 
         try:
-            with httpx.Client(timeout=10.0) as client:
+            with httpx.Client(timeout=25.0) as client:
                 res = client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
                 if res.status_code == 200:
                     data = res.json()
                     content = data["choices"][0]["message"]["content"]
                     parsed = extract_json(content)
-                    if parsed:
+                    if parsed and isinstance(parsed, dict):
                         return parsed
         except Exception as e:
             print(f"[Vision AI OpenAI Error]: {e}")
@@ -165,21 +245,35 @@ def analyze_medical_image_with_ai(
 
 def fallback_image_analysis(filename: str = "Medical Document", user_query: Optional[str] = None) -> Dict[str, Any]:
     """
-    Rapid deterministic clinical document parser when offline.
+    Deterministic clinical document parser when offline or when external vision is unavailable.
+    Performs regex extraction of any blood parameters in the user query or filename.
     """
-    name_lower = filename.lower()
-    
-    if any(k in name_lower for k in ["rx", "prescrip", "med", "doctor", "slip"]):
+    name_lower = (filename or "").lower()
+    query_text = user_query or ""
+    combined_text = f"{name_lower} {query_text}"
+
+    extracted_biomarkers, abnormal_findings = parse_blood_biomarkers_from_text(combined_text)
+
+    if extracted_biomarkers:
+        doc_type = "Lab Report"
+        doc_title = "Clinical Diagnostic Laboratory Report"
+        abn_text = ", ".join(abnormal_findings) if abnormal_findings else "All detected parameters are within normal range."
+        reply = (
+            f"**Laboratory Test Report Evaluation ({filename}):**\n\n"
+            f"- **Assessment:** Extracted {len(extracted_biomarkers)} clinical biomarker(s). {abn_text}\n"
+            "- **Care & Relief:** Maintain balanced hydration and follow a nutrient-dense diet supporting affected organ systems.\n"
+            "- **Next Step:** Present these laboratory findings to your consulting physician for clinical correlation."
+        )
+        doctor = "Consultant Pathologist / General Physician"
+        risk_level = "High" if len(abnormal_findings) >= 2 else "Moderate" if abnormal_findings else "Low"
+    elif any(k in name_lower for k in ["rx", "prescrip", "med", "doctor", "slip"]):
         doc_type = "Prescription"
         doc_title = "Doctor Outpatient Prescription"
         reply = (
-            f" **Prescription Image Received ({filename})**\n\n"
-            "Our medical vision pipeline has scanned your prescription.\n"
-            "• **Key Guidelines:**\n"
-            "  - Take all prescribed medications strictly as scheduled with proper meals.\n"
-            "  - Do not skip doses or stop antibiotic courses prematurely.\n"
-            "  - If you experience adverse reactions (rash, stomach irritation), contact your doctor immediately.\n\n"
-            "Please confirm with your pharmacist when dispensing medications."
+            f"**Prescription Document Scanned ({filename}):**\n\n"
+            "- **Assessment:** Prescription successfully logged in your medical records.\n"
+            "- **Care & Relief:** Take all prescribed medications strictly as scheduled with proper meals. Do not alter dosages without doctor approval.\n"
+            "- **Next Step:** Confirm medication instructions with your dispensing pharmacist."
         )
         doctor = "Prescribing Physician / Pharmacist"
         risk_level = "Low"
@@ -187,12 +281,10 @@ def fallback_image_analysis(filename: str = "Medical Document", user_query: Opti
         doc_type = "Lab Report"
         doc_title = "Clinical Diagnostic Laboratory Report"
         reply = (
-            f" **Laboratory Test Report Analyzed ({filename})**\n\n"
-            "Your clinical lab report has been processed.\n"
-            "• **Standard Clinical Recommendations:**\n"
-            "  - Most biomarkers appear within standard metabolic baseline thresholds.\n"
-            "  - If any parameters were flagged (e.g. elevated glucose, cholesterol, or creatinine), dietary modulation and regular physical activity are advised.\n\n"
-            "We recommend sharing this lab report with your consulting physician during your next visit."
+            f"**Laboratory Test Report Scanned ({filename}):**\n\n"
+            "- **Assessment:** Blood test report received. For optimal automated parameter extraction, please ensure the photo is clear and well-lit, or type specific values (e.g. Hb, Creatinine, Bilirubin) in chat.\n"
+            "- **Care & Relief:** Compare your report's values against the normal reference column provided by the testing laboratory.\n"
+            "- **Next Step:** Consult your General Physician or Pathologist for formal review."
         )
         doctor = "Consultant Pathologist / General Physician"
         risk_level = "Moderate"
@@ -200,10 +292,10 @@ def fallback_image_analysis(filename: str = "Medical Document", user_query: Opti
         doc_type = "Hospital Document"
         doc_title = "Medical Diagnostic File"
         reply = (
-            f" **Medical File Processed ({filename})**\n\n"
-            "Your uploaded clinical document has been securely indexed.\n"
-            f"Patient question: \"{user_query if user_query else 'Review report'}\"\n\n"
-            "Our AI system has analyzed the visual parameters. Keep this digital copy accessible for your upcoming clinical evaluations."
+            f"**Medical Document Indexed ({filename}):**\n\n"
+            f"- **Assessment:** Clinical document received. Context: \"{user_query if user_query else 'Medical review'}\".\n"
+            "- **Care & Relief:** Maintain this record in your personal health log for continuity of care.\n"
+            "- **Next Step:** Review diagnostic findings with your healthcare provider during your upcoming evaluation."
         )
         doctor = "General Physician"
         risk_level = "Low"
@@ -216,10 +308,11 @@ def fallback_image_analysis(filename: str = "Medical Document", user_query: Opti
         "risk_level": risk_level,
         "doctor": doctor,
         "prescriptions": [],
-        "lab_biomarkers": [],
-        "abnormal_findings": [],
+        "lab_biomarkers": extracted_biomarkers,
+        "abnormal_findings": abnormal_findings,
         "recommendations": [
             "Review diagnostic findings with your healthcare provider.",
             "Maintain prescribed therapeutic and dietary regimens."
         ]
     }
+
