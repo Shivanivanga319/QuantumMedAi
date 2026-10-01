@@ -94,53 +94,53 @@ def build_xai_explanation(
     
     if language == "te":
         if is_high:
-            prefix = f"🔬 **క్వాంటమ్ డీప్ లెర్నింగ్ విశ్లేషణ ({disease_name} - అధిక రిస్క్):**\nఈ ఫలితం రావడానికి ముఖ్య కారణాలు:\n"
-            reasons = "\n".join([f"• 🔴 **ప్రధాన కారణం:** {f}" for f in driving_factors])
+            prefix = f" **క్వాంటమ్ డీప్ లెర్నింగ్ విశ్లేషణ ({disease_name} - అధిక రిస్క్):**\nఈ ఫలితం రావడానికి ముఖ్య కారణాలు:\n"
+            reasons = "\n".join([f"•  **ప్రధాన కారణం:** {f}" for f in driving_factors])
             if protective_factors:
-                reasons += "\n" + "\n".join([f"• 🟢 **సాధారణ స్థితి:** {f}" for f in protective_factors[:2]])
-            summary = "\n\n💡 *సిఫార్సు:* వెంటనే సంబంధిత నిపుణులైన వైద్యులను సంప్రదించి పరీక్షలు చేయించుకోండి."
+                reasons += "\n" + "\n".join([f"•  **సాధారణ స్థితి:** {f}" for f in protective_factors[:2]])
+            summary = "\n\n *సిఫార్సు:* వెంటనే సంబంధిత నిపుణులైన వైద్యులను సంప్రదించి పరీక్షలు చేయించుకోండి."
         elif is_mod:
-            prefix = f"🔬 **క్వాంటమ్ డీప్ లెర్నింగ్ విశ్లేషణ ({disease_name} - మధ్యస్థ రిస్క్):**\n"
-            reasons = "\n".join([f"• ⚠️ **శ్రద్ధ వహించవలసిన అంశం:** {f}" for f in driving_factors])
-            summary = "\n\n💡 *సిఫార్సు:* జీవనశైలి మార్పులు చేసుకోవడం మరియు సాధారణ తనిఖీలు చేయించుకోవడం మంచిది."
+            prefix = f" **క్వాంటమ్ డీప్ లెర్నింగ్ విశ్లేషణ ({disease_name} - మధ్యస్థ రిస్క్):**\n"
+            reasons = "\n".join([f"• ️ **శ్రద్ధ వహించవలసిన అంశం:** {f}" for f in driving_factors])
+            summary = "\n\n *సిఫార్సు:* జీవనశైలి మార్పులు చేసుకోవడం మరియు సాధారణ తనిఖీలు చేయించుకోవడం మంచిది."
         else:
-            prefix = f"🔬 **క్వాంటమ్ డీప్ లెర్నింగ్ విశ్లేషణ ({disease_name} - తక్కువ / సాధారణ రిస్క్):**\n"
-            reasons = "\n".join([f"• 🟢 **ఆరోగ్యకరమైన బయోమార్కర్:** {f}" for f in protective_factors])
-            summary = "\n\n💡 *సిఫార్సు:* మీ ప్రస్తుత ఆరోగ్యకరమైన అలవాట్లను మరియు ఆహారపు నియమాలను కొనసాగించండి."
+            prefix = f" **క్వాంటమ్ డీప్ లెర్నింగ్ విశ్లేషణ ({disease_name} - తక్కువ / సాధారణ రిస్క్):**\n"
+            reasons = "\n".join([f"•  **ఆరోగ్యకరమైన బయోమార్కర్:** {f}" for f in protective_factors])
+            summary = "\n\n *సిఫార్సు:* మీ ప్రస్తుత ఆరోగ్యకరమైన అలవాట్లను మరియు ఆహారపు నియమాలను కొనసాగించండి."
         return prefix + reasons + summary
 
     elif language == "hi":
         if is_high:
-            prefix = f"🔬 **क्वांटम डीप लर्निंग विश्लेषण ({disease_name} - उच्च जोखिम):**\nयह परिणाम आने के मुख्य नैदानिक कारण:\n"
-            reasons = "\n".join([f"• 🔴 **मुख्य जोखिम कारक:** {f}" for f in driving_factors])
+            prefix = f" **क्वांटम डीप लर्निंग विश्लेषण ({disease_name} - उच्च जोखिम):**\nयह परिणाम आने के मुख्य नैदानिक कारण:\n"
+            reasons = "\n".join([f"•  **मुख्य जोखिम कारक:** {f}" for f in driving_factors])
             if protective_factors:
-                reasons += "\n" + "\n".join([f"• 🟢 **सामान्य स्तर:** {f}" for f in protective_factors[:2]])
-            summary = "\n\n💡 *सलाह:* कृपया बिना देरी किए विशेषज्ञ डॉक्टर से परामर्श लें।"
+                reasons += "\n" + "\n".join([f"•  **सामान्य स्तर:** {f}" for f in protective_factors[:2]])
+            summary = "\n\n *सलाह:* कृपया बिना देरी किए विशेषज्ञ डॉक्टर से परामर्श लें।"
         elif is_mod:
-            prefix = f"🔬 **क्वांटम डीप लर्निंग विश्लेषण ({disease_name} - मध्यम जोखिम):**\n"
-            reasons = "\n".join([f"• ⚠️ **ध्यान देने योग्य बिंदु:** {f}" for f in driving_factors])
-            summary = "\n\n💡 *सलाह:* आहार और दिनचर्या में सुधार करें तथा नियमित जांच करवाएं।"
+            prefix = f" **क्वांटम डीप लर्निंग विश्लेषण ({disease_name} - मध्यम जोखिम):**\n"
+            reasons = "\n".join([f"• ️ **ध्यान देने योग्य बिंदु:** {f}" for f in driving_factors])
+            summary = "\n\n *सलाह:* आहार और दिनचर्या में सुधार करें तथा नियमित जांच करवाएं।"
         else:
-            prefix = f"🔬 **क्वांटम डीप लर्निंग विश्लेषण ({disease_name} - कम / सामान्य जोखिम):**\n"
-            reasons = "\n".join([f"• 🟢 **स्वस्थ बायोमार्कर:** {f}" for f in protective_factors])
-            summary = "\n\n💡 *सलाह:* अपनी स्वस्थ जीवनशैली और संतुलित खानपान को बनाए रखें।"
+            prefix = f" **क्वांटम डीप लर्निंग विश्लेषण ({disease_name} - कम / सामान्य जोखिम):**\n"
+            reasons = "\n".join([f"•  **स्वस्थ बायोमार्कर:** {f}" for f in protective_factors])
+            summary = "\n\n *सलाह:* अपनी स्वस्थ जीवनशैली और संतुलित खानपान को बनाए रखें।"
         return prefix + reasons + summary
 
     else:
         if is_high:
-            prefix = f"🔬 **Quantum Deep Learning Assessment ({disease_name} - High Risk):**\nThe quantum neural model identified elevated risk based on the following key drivers:\n"
-            reasons = "\n".join([f"• 🔴 **Primary Risk Factor:** {f}" for f in driving_factors])
+            prefix = f" **Quantum Deep Learning Assessment ({disease_name} - High Risk):**\nThe quantum neural model identified elevated risk based on the following key drivers:\n"
+            reasons = "\n".join([f"•  **Primary Risk Factor:** {f}" for f in driving_factors])
             if protective_factors:
-                reasons += "\n" + "\n".join([f"• 🟢 **Protective / Normal:** {f}" for f in protective_factors[:2]])
-            summary = "\n\n💡 *Clinical Action:* Prompt specialist evaluation and follow-up diagnostics are recommended."
+                reasons += "\n" + "\n".join([f"•  **Protective / Normal:** {f}" for f in protective_factors[:2]])
+            summary = "\n\n *Clinical Action:* Prompt specialist evaluation and follow-up diagnostics are recommended."
         elif is_mod:
-            prefix = f"🔬 **Quantum Deep Learning Assessment ({disease_name} - Moderate Risk):**\nBorderline markers requiring clinical monitoring:\n"
-            reasons = "\n".join([f"• ⚠️ **Borderline Finding:** {f}" for f in driving_factors])
-            summary = "\n\n💡 *Clinical Action:* Preventive lifestyle modifications and routine periodic checkups advised."
+            prefix = f" **Quantum Deep Learning Assessment ({disease_name} - Moderate Risk):**\nBorderline markers requiring clinical monitoring:\n"
+            reasons = "\n".join([f"• ️ **Borderline Finding:** {f}" for f in driving_factors])
+            summary = "\n\n *Clinical Action:* Preventive lifestyle modifications and routine periodic checkups advised."
         else:
-            prefix = f"🔬 **Quantum Deep Learning Assessment ({disease_name} - Low / Healthy):**\nBiomarkers are within safe reference thresholds:\n"
-            reasons = "\n".join([f"• 🟢 **Healthy Marker:** {f}" for f in protective_factors])
-            summary = "\n\n💡 *Clinical Action:* Continue your current wellness routine and preventive annual screenings."
+            prefix = f" **Quantum Deep Learning Assessment ({disease_name} - Low / Healthy):**\nBiomarkers are within safe reference thresholds:\n"
+            reasons = "\n".join([f"•  **Healthy Marker:** {f}" for f in protective_factors])
+            summary = "\n\n *Clinical Action:* Continue your current wellness routine and preventive annual screenings."
         return prefix + reasons + summary
 
 

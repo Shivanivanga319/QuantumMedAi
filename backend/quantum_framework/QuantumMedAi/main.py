@@ -29,9 +29,9 @@ print("\nChecking Project Structure...\n")
 for folder in folders:
     path = Path(folder)
     if path.exists():
-        print(f"✓ {folder}")
+        print(f" {folder}")
     else:
-        print(f"✗ {folder} (Missing)")
+        print(f" {folder} (Missing)")
 
 print("\nProject Structure Verified Successfully.")
 print("Ready for Dataset Preprocessing.")

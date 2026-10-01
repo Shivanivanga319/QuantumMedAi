@@ -1,5 +1,5 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import i18n from'i18next';
+import { initReactI18next } from'react-i18next';
 
 const resources = {
   en: {
@@ -148,14 +148,14 @@ const resources = {
       no: "No",
 
       // Medical History & Reports
-      historyTitle: "📋 Clinical Assessment History",
+      historyTitle: "Clinical Assessment History",
       historySubtitle: "Live records synced with SQLite database for",
-      refreshRecords: "🔄 Refresh Records",
+      refreshRecords: "Refresh Records",
       noHistory: "No diagnostic records found yet.",
-      runFirstAssessment: "Run Your First Disease Assessment 🚀",
-      reportsTitle: "📊 Health Metrics & Diagnostic Analysis",
+      runFirstAssessment: "Run Your First Disease Assessment",
+      reportsTitle: "Health Metrics & Diagnostic Analysis",
       reportsSubtitle: "Aggregated telemetry from all completed AI risk evaluations.",
-      printSummary: "🖨️ Print Summary",
+      printSummary: "️ Print Summary",
       totalAssessments: "Total Assessments",
       highCriticalRisk: "High / Critical Risk",
       moderateRisk: "Moderate Risk",
@@ -173,7 +173,7 @@ const resources = {
       cancel: "Cancel",
 
       // Emergency
-      emergencyTitle: "🚨 QuantumMed AI Emergency Triage",
+      emergencyTitle: "QuantumMed AI Emergency Triage",
       emergencyNotice: "If this is a life-threatening medical emergency, call 108 / 112 immediately.",
       startTriageBtn: "Start Emergency Triage Assessment",
       callingEmergency: "Calling Emergency Services (108 / 112)",

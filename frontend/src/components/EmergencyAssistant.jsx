@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { api } from "../services/api";
+import React, { useState, useEffect } from"react";
+import { useTranslation } from"react-i18next";
+import { api } from"../services/api";
 
 const questionsMap = {
   en: [
@@ -233,7 +233,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
 
   // Generate offline SMS & WhatsApp links
   const mapsUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
-  const sosMsg = `🚨 [QUANTUMMED AI EMERGENCY ALERT]\nPatient Status: ${result?.severity || 'CRITICAL'} - ${result?.emergency || 'Acute Emergency'}\nGPS: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}\nLive Map: ${mapsUrl}\nImmediate ambulance & ICU dispatch required. Call 108.`;
+  const sosMsg = ` [QUANTUMMED AI EMERGENCY ALERT]\nPatient Status: ${result?.severity || 'CRITICAL'} - ${result?.emergency || 'Acute Emergency'}\nGPS: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}\nLive Map: ${mapsUrl}\nImmediate ambulance & ICU dispatch required. Call 108.`;
   const smsIntent = `sms:108?body=${encodeURIComponent(sosMsg)}`;
   const waIntent = `https://wa.me/?text=${encodeURIComponent(sosMsg)}`;
 
@@ -254,7 +254,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
       zIndex: 9999,
       padding: "16px"
     }}>
-      <div className="emergency-modal-content" style={{
+      <div className="emergency-modal-content"style={{
         background: "white",
         borderRadius: "24px",
         width: "100%",
@@ -269,7 +269,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
         {/* Modal Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div className="emergency-sos-badge" style={{ background: '#991b1b', color: '#fff', padding: '4px 10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>SOS</div>
+            <div className="emergency-sos-badge"style={{ background: '#991b1b', color: '#fff', padding: '4px 10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>SOS</div>
             <div>
               <h2 style={{ margin: 0, color: "#991b1b", fontSize: "1.3rem", fontWeight: 800 }}>
                 {t('emergencyModalTitle')}
@@ -292,7 +292,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
               color: "#64748b"
             }}
           >
-            ✕
+            
           </button>
         </div>
 
@@ -373,7 +373,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                 {activeQuestions[questionIndex]}
               </h3>
               <p style={{ margin: 0, color: "#64748b", fontSize: "0.88rem" }}>
-                Say "Yes" / "No" or tap below
+                Say"Yes" / "No"or tap below
               </p>
             </div>
 
@@ -408,7 +408,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                   boxShadow: "0 4px 12px rgba(185, 28, 28, 0.25)"
                 }}
               >
-                {t('no')} ❌
+                {t('no')} 
               </button>
             </div>
           </div>
@@ -468,7 +468,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
             {nearestHospitals.length > 0 && (
               <div style={{ marginBottom: '18px' }}>
                 <strong style={{ color: '#063940', display: 'block', marginBottom: '8px', fontSize: '0.92rem' }}>
-                  🏥 Nearest Emergency Hospitals & ICU:
+                   Nearest Emergency Hospitals & ICU:
                 </strong>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {nearestHospitals.map(h => (
@@ -476,7 +476,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                       <div>
                         <strong style={{ color: '#063940', fontSize: '0.88rem' }}>{h.name}</strong>
                         <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                          📏 {h.distance_km} km | ⏱️ ~{h.eta_minutes} mins | 🟢 {h.icu_beds_available} ICU Beds
+                           {h.distance_km} km | ⏱️ ~{h.eta_minutes} mins |  {h.icu_beds_available} ICU Beds
                         </div>
                       </div>
                       <a
@@ -485,7 +485,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                         rel="noopener noreferrer"
                         style={{ background: 'linear-gradient(135deg, #063940 0%, #07A3B2 100%)', color: 'white', textDecoration: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700 }}
                       >
-                        🧭 Route
+                         Route
                       </a>
                     </div>
                   ))}
@@ -496,7 +496,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
             {/* 1-Click Offline SMS & WhatsApp SOS Fallback Actions */}
             <div style={{ background: '#f1f5f9', padding: '12px', borderRadius: '12px', marginBottom: '16px' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>
-                📲 Automated Offline SOS Dispatch (Works Without Internet):
+                 Automated Offline SOS Dispatch (Works Without Internet):
               </span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <a
@@ -516,7 +516,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                     fontSize: '0.82rem'
                   }}
                 >
-                  ✉️ Cellular SMS SOS
+                  ️ Cellular SMS SOS
                 </a>
                 <a
                   href={waIntent}
@@ -537,7 +537,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                     fontSize: '0.82rem'
                   }}
                 >
-                  💬 WhatsApp SOS
+                   WhatsApp SOS
                 </a>
               </div>
             </div>
@@ -561,7 +561,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                   boxShadow: "0 4px 12px rgba(220, 38, 38, 0.25)"
                 }}
               >
-                📞 Call 108 (Ambulance)
+                 Call 108 (Ambulance)
               </a>
               <button
                 onClick={onClose}

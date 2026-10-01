@@ -173,7 +173,7 @@ def fallback_image_analysis(filename: str = "Medical Document", user_query: Opti
         doc_type = "Prescription"
         doc_title = "Doctor Outpatient Prescription"
         reply = (
-            f"📄 **Prescription Image Received ({filename})**\n\n"
+            f" **Prescription Image Received ({filename})**\n\n"
             "Our medical vision pipeline has scanned your prescription.\n"
             "• **Key Guidelines:**\n"
             "  - Take all prescribed medications strictly as scheduled with proper meals.\n"
@@ -187,7 +187,7 @@ def fallback_image_analysis(filename: str = "Medical Document", user_query: Opti
         doc_type = "Lab Report"
         doc_title = "Clinical Diagnostic Laboratory Report"
         reply = (
-            f"🧪 **Laboratory Test Report Analyzed ({filename})**\n\n"
+            f" **Laboratory Test Report Analyzed ({filename})**\n\n"
             "Your clinical lab report has been processed.\n"
             "• **Standard Clinical Recommendations:**\n"
             "  - Most biomarkers appear within standard metabolic baseline thresholds.\n"
@@ -200,7 +200,7 @@ def fallback_image_analysis(filename: str = "Medical Document", user_query: Opti
         doc_type = "Hospital Document"
         doc_title = "Medical Diagnostic File"
         reply = (
-            f"📋 **Medical File Processed ({filename})**\n\n"
+            f" **Medical File Processed ({filename})**\n\n"
             "Your uploaded clinical document has been securely indexed.\n"
             f"Patient question: \"{user_query if user_query else 'Review report'}\"\n\n"
             "Our AI system has analyzed the visual parameters. Keep this digital copy accessible for your upcoming clinical evaluations."

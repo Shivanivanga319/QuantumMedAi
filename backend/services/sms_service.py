@@ -26,7 +26,7 @@ def format_emergency_sms_payload(
 
     # Construct the ultra-clear SMS Dispatch Text
     sms_text = (
-        f"🚨 [QUANTUMMED AI EMERGENCY ALERT]\n"
+        f" [QUANTUMMED AI EMERGENCY ALERT]\n"
         f"Patient: {clean_name}\n"
         f"Status: {clean_sev.upper()} - {clean_type}\n"
         f"{coords_text}\n"

@@ -118,7 +118,7 @@ app.include_router(predictions.router)
 def home():
     return {
         "project": "QuantumMedAI",
-        "message": "Welcome to QuantumMedAI Backend 🚀",
+        "message": "Welcome to QuantumMedAI Backend ",
         "status": "Backend is running successfully!",
         "endpoints": {
             "auth": ["/auth/register", "/auth/login", "/auth/me"],

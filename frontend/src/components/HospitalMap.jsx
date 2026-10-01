@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { api } from '../services/api';
+import React, { useState, useEffect } from'react';
+import { useTranslation } from'react-i18next';
+import { api } from'../services/api';
 
 export default function HospitalMap({ currentUser }) {
   const { t, i18n } = useTranslation();
@@ -186,7 +186,7 @@ export default function HospitalMap({ currentUser }) {
   };
 
   return (
-    <div className="hospital-map-container" style={{ padding: '4px' }}>
+    <div className="hospital-map-container"style={{ padding: '4px' }}>
       {/* Header Banner */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
@@ -587,7 +587,7 @@ export default function HospitalMap({ currentUser }) {
                     onClick={() => setPreAlertModal(false)}
                     style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', color: '#64748b', fontWeight: 'bold' }}
                   >
-                    ✕
+                    
                   </button>
                 </div>
 

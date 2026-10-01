@@ -27,60 +27,77 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      let data;
-      try {
-        data = await api.login(cleanEmail, password);
-      } catch (apiErr) {
-        // Fallback: Check local device registry (recovers user if Render container restarted/rebuilt)
-        const localRegistry = JSON.parse(localStorage.getItem('quantum_registered_users') || '{}');
-        const localUser = localRegistry[cleanEmail];
+      const expiresInHours = 24 * 90;
+      const expirationTime = new Date().getTime() + (expiresInHours * 60 * 60 * 1000);
 
-        if (localUser && localUser.password === password) {
-          data = {
-            access_token: 'quantum_resilient_token_' + Date.now(),
-            user: {
-              name: localUser.fullName,
-              email: cleanEmail,
-              gender: localUser.gender,
-              age: localUser.age,
-              phone: localUser.phone
-            }
-          };
+      // Fast-path: Check local device registry immediately (< 50ms instant login)
+      const localRegistry = JSON.parse(localStorage.getItem('quantum_registered_users') || '{}');
+      const localUser = localRegistry[cleanEmail];
 
-          // Re-sync with backend in background so database is re-populated
-          api.register({
-            fullName: localUser.fullName,
+      if (localUser && localUser.password === password) {
+        const sessionData = {
+          token: 'quantum_fast_token_' + Date.now(),
+          user: {
+            name: localUser.fullName,
             email: cleanEmail,
-            password: password,
             gender: localUser.gender,
             age: localUser.age,
             phone: localUser.phone
-          }).catch(() => {});
-        } else if (cleanEmail === 'demo@quantummed.ai' && (password === 'password123' || password === 'demo123')) {
-          data = {
-            access_token: 'quantum_demo_token',
-            user: {
-              name: 'Quantum Medical Demo',
-              email: cleanEmail,
-              gender: 'Female',
-              age: 28,
-              phone: '9876543210'
-            }
-          };
-        } else {
-          throw apiErr;
-        }
+          },
+          expiry: expirationTime
+        };
+        localStorage.setItem('quantum_session', JSON.stringify(sessionData));
+        localStorage.setItem('quantum_user_profile', JSON.stringify(sessionData.user));
+
+        // Background server sync without blocking user
+        api.login(cleanEmail, password).catch(() => {});
+        navigate('/home');
+        return;
       }
 
-      // Set session duration to 90 days
-      const expiresInHours = 24 * 90;
-      const expirationTime = new Date().getTime() + (expiresInHours * 60 * 60 * 1000);
+      // Demo account fast-path
+      if (cleanEmail === 'demo@quantummed.ai' && (password === 'password123' || password === 'demo123')) {
+        const sessionData = {
+          token: 'quantum_demo_token',
+          user: {
+            name: 'Quantum Medical Demo',
+            email: cleanEmail,
+            gender: 'Female',
+            age: 28,
+            phone: '9876543210'
+          },
+          expiry: expirationTime
+        };
+        localStorage.setItem('quantum_session', JSON.stringify(sessionData));
+        localStorage.setItem('quantum_user_profile', JSON.stringify(sessionData.user));
+        navigate('/home');
+        return;
+      }
+
+      // Cloud authentication with timeout protection
+      const loginPromise = api.login(cleanEmail, password);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Server response took longer than expected. Please retry or use demo credentials.")), 8000)
+      );
+
+      const data = await Promise.race([loginPromise, timeoutPromise]);
 
       const sessionData = {
         token: data.access_token || 'quantum_token',
         user: data.user || { email: cleanEmail, name: cleanEmail.split('@')[0] },
         expiry: expirationTime
       };
+
+      // Cache verified user for instant subsequent logins
+      localRegistry[cleanEmail] = {
+        fullName: sessionData.user.name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        password: password,
+        gender: sessionData.user.gender || 'Not specified',
+        age: sessionData.user.age || '',
+        phone: sessionData.user.phone || ''
+      };
+      localStorage.setItem('quantum_registered_users', JSON.stringify(localRegistry));
 
       localStorage.setItem('quantum_session', JSON.stringify(sessionData));
       localStorage.setItem('quantum_user_profile', JSON.stringify(sessionData.user));
@@ -241,7 +258,7 @@ const LoginPage = () => {
               gap: '6px'
             }}
           >
-            <span>💡 Click to Fill Demo Account</span>
+            <span>Click to Fill Demo Account</span>
             <span style={{ fontSize: '0.75rem', color: '#64748b' }}>(demo@quantummed.ai)</span>
           </button>
         </form>

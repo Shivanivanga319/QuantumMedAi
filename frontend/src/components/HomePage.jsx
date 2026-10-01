@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import EmergencyAssistant from "./EmergencyAssistant";
-import DiseasePredictors from "./DiseasePredictors";
-import HospitalMap from "./HospitalMap";
-import OfflineEmergencySuite from "./OfflineEmergencySuite";
-import { api } from "../services/api";
+import React, { useState, useEffect, useRef } from'react';
+import { useNavigate } from'react-router-dom';
+import { useTranslation } from'react-i18next';
+import EmergencyAssistant from"./EmergencyAssistant";
+import DiseasePredictors from"./DiseasePredictors";
+import HospitalMap from"./HospitalMap";
+import OfflineEmergencySuite from"./OfflineEmergencySuite";
+import { api } from"../services/api";
 
 
 
@@ -243,7 +243,7 @@ const HomePage = () => {
 
   // Clean Markdown & Medical Abbreviations for Natural Speech Synthesis
   const cleanTextForSpeech = (text) => {
-    if (!text) return '';
+    if (!text) return'';
     return text
       .replace(/[#*_`>~-]/g, ' ')
       .replace(/\[.*?\]/g, ' ')
@@ -391,7 +391,7 @@ const HomePage = () => {
   };
 
   const cleanAiDisplayMessage = (raw) => {
-    if (!raw) return '';
+    if (!raw) return'';
     let s = String(raw).trim();
     const match = s.match(/"ai_reply"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)/);
     if (match && match[1]) {
@@ -442,7 +442,7 @@ const HomePage = () => {
     // Prepare multi-turn conversational history context
     const historyPayload = messages
       .slice(-8)
-      .filter(m => m.text && !m.text.includes('🚨 CRITICAL EMERGENCY INDICATOR DETECTED'))
+      .filter(m => m.text && !m.text.includes('CRITICAL EMERGENCY INDICATOR DETECTED'))
       .map(m => ({
         sender: m.sender === 'user' ? 'user' : 'assistant',
         text: m.text
@@ -490,7 +490,7 @@ const HomePage = () => {
           ...prev,
           { 
             sender: 'ai', 
-            text: `🚨 CRITICAL EMERGENCY INDICATOR DETECTED!\nOpening Emergency Triage Assistant immediately...`,
+            text: ` CRITICAL EMERGENCY INDICATOR DETECTED!\nOpening Emergency Triage Assistant immediately...`,
             isEmergency: true
           }
         ]);
@@ -567,7 +567,7 @@ const HomePage = () => {
       
       {isOffline && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, background: '#ef4444', color: 'white', padding: '10px', textAlign: 'center', zIndex: 1000, fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
-          <span>⚠️ No internet connection detected. Please check your network.</span>
+          <span>️ No internet connection detected. Please check your network.</span>
           <button onClick={() => window.location.reload()} style={{ background: 'white', color: '#ef4444', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
             Retry
           </button>
@@ -576,7 +576,7 @@ const HomePage = () => {
 
       {/* Sidebar Mobile Overlay */}
       {sidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+        <div className="sidebar-overlay"onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
@@ -634,7 +634,7 @@ const HomePage = () => {
               onClick={() => setSidebarOpen(!sidebarOpen)} 
               title="Open Navigation Menu"
             >
-              ☰
+              
             </button>
             
             <h2 className="header-title">
@@ -716,10 +716,10 @@ const HomePage = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e', display: 'inline-block', boxShadow: '0 0 8px #22c55e' }}></span>
               <strong style={{ fontSize: '0.9rem' }}>
-                {i18n.language === 'te' ? '🎙️ డాక్టర్ వాయిస్ కాల్ యాక్టివ్‌గా ఉంది (తెలుగు)' : i18n.language === 'hi' ? '🎙️ डॉक्टर वॉइस कॉल सक्रिय है (हिंदी)' : '🎙️ Hands-Free Voice Doctor Call Active (English)'}
+                {i18n.language === 'te' ? '️ డాక్టర్ వాయిస్ కాల్ యాక్టివ్‌గా ఉంది (తెలుగు)' : i18n.language === 'hi' ? '️ डॉक्टर वॉइस कॉल सक्रिय है (हिंदी)' : '️ Hands-Free Voice Doctor Call Active (English)'}
               </strong>
               <span style={{ fontSize: '0.82rem', opacity: 0.85 }}>
-                {isListening ? 'Listening to your symptoms... 👂' : isSpeaking ? 'Dr. Quantum is speaking... 🗣️' : 'Speak naturally without typing.'}
+                {isListening ? 'Listening to your symptoms... ' : isSpeaking ? 'Dr. Quantum is speaking... ️' : 'Speak naturally without typing.'}
               </span>
             </div>
             <button
@@ -755,7 +755,7 @@ const HomePage = () => {
                   {/* Vision Data Breakdown: Prescriptions */}
                   {msg.visionData?.prescriptions?.length > 0 && (
                     <div style={{ marginTop: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}>💊 Extracted Prescribed Medications:</strong>
+                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}> Extracted Prescribed Medications:</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
                         {msg.visionData.prescriptions.map((rx, rIdx) => (
                           <div key={rIdx} style={{ background: 'white', padding: '8px 10px', borderRadius: '6px', fontSize: '0.82rem', border: '1px solid #e2e8f0' }}>
@@ -770,7 +770,7 @@ const HomePage = () => {
                   {/* Vision Data Breakdown: Lab Biomarkers */}
                   {msg.visionData?.lab_biomarkers?.length > 0 && (
                     <div style={{ marginTop: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}>🧪 Clinical Laboratory Biomarkers:</strong>
+                      <strong style={{ color: '#063940', fontSize: '0.9rem' }}> Clinical Laboratory Biomarkers:</strong>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginTop: '6px' }}>
                         {msg.visionData.lab_biomarkers.map((bio, bIdx) => (
                           <div key={bIdx} style={{ background: 'white', padding: '6px 8px', borderRadius: '6px', fontSize: '0.8rem', border: '1px solid #e2e8f0' }}>
@@ -788,13 +788,13 @@ const HomePage = () => {
                   {/* Vision Data Breakdown: Abnormal Findings */}
                   {msg.visionData?.abnormal_findings?.length > 0 && (
                     <div style={{ marginTop: '10px', background: '#fee2e2', padding: '8px 12px', borderRadius: '6px', fontSize: '0.82rem', color: '#991b1b' }}>
-                      <strong>⚠️ Notable Out-of-Range Markers:</strong> {msg.visionData.abnormal_findings.join(', ')}
+                      <strong>️ Notable Out-of-Range Markers:</strong> {msg.visionData.abnormal_findings.join(', ')}
                     </div>
                   )}
 
                   {msg.doctor && (
                     <div style={{ fontSize: '0.8rem', marginTop: '8px', fontWeight: 'bold', opacity: 0.9 }}>
-                      👨‍⚕️ Specialist: {msg.doctor} {msg.risk && `(${msg.risk} Risk)`}
+                      ‍️ Specialist: {msg.doctor} {msg.risk && `(${msg.risk} Risk)`}
                     </div>
                   )}
 
@@ -819,7 +819,7 @@ const HomePage = () => {
                           boxShadow: '0 2px 6px rgba(7,163,178,0.3)'
                         }}
                       >
-                        🩺 Open Disease Predictors Hub
+                         Open Disease Predictors Hub
                       </button>
                     </div>
                   )}
@@ -860,7 +860,7 @@ const HomePage = () => {
               ))}
 
               {isLoading && (
-                <div className="chat-msg-ai" style={{ fontStyle: 'italic', color: '#64748b' }}>
+                <div className="chat-msg-ai"style={{ fontStyle: 'italic', color: '#64748b' }}>
                   QuantumMedAI neural models are analyzing clinical parameters...
                 </div>
               )}
@@ -900,7 +900,7 @@ const HomePage = () => {
             {selectedFile && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e2e8f0', padding: '6px 14px', borderRadius: '16px', margin: '0 0 8px 12px', width: 'fit-content' }}>
                 {selectedFilePreview ? (
-                  <img src={selectedFilePreview} alt="thumb" style={{ width: '22px', height: '22px', borderRadius: '4px', objectFit: 'cover' }} />
+                  <img src={selectedFilePreview} alt="thumb"style={{ width: '22px', height: '22px', borderRadius: '4px', objectFit: 'cover' }} />
                 ) : (
                   <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#063940' }}>Doc:</span>
                 )}
@@ -910,7 +910,7 @@ const HomePage = () => {
                   onClick={handleClearSelectedFile} 
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem', padding: '0 4px' }}
                 >
-                  ✕
+                  
                 </button>
               </div>
             )}
@@ -931,7 +931,7 @@ const HomePage = () => {
                   title="Attach medical report or prescription image"
                   onClick={() => fileInputRef.current.click()}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round">
                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                   </svg>
                 </button>
@@ -969,18 +969,18 @@ const HomePage = () => {
                     flexShrink: 0
                   }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="2" width="6" height="11" rx="3"></rect>
+                  <svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round">
+                    <rect x="9"y="2"width="6"height="11"rx="3"></rect>
                     <path d="M5 10a7 7 0 0 0 14 0"></path>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12"y1="17"x2="12"y2="21"></line>
+                    <line x1="8"y1="21"x2="16"y2="21"></line>
                   </svg>
                 </button>
 
-                <button type="submit" className="chat-send-btn" title="Send Message">
+                <button type="submit"className="chat-send-btn"title="Send Message">
                   <span className="send-btn-text">{t('sendBtn')}</span>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2.5"strokeLinecap="round"strokeLinejoin="round"style={{ flexShrink: 0 }}>
+                    <line x1="22"y1="2"x2="11"y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                   </svg>
                 </button>
@@ -991,7 +991,7 @@ const HomePage = () => {
 
         {/* Tab 2: Disease Predictors Hub */}
         {activeTab === 'predictor' && (
-          <div className="chat-box" style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
+          <div className="chat-box"style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
             <DiseasePredictors 
               currentUser={currentUser}
               userEmail={currentUser?.email} 
@@ -1002,21 +1002,21 @@ const HomePage = () => {
 
         {/* Tab 2.5: Geo-Localized Emergency Hospital & ICU Map */}
         {activeTab === 'hospitals' && (
-          <div className="chat-box" style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
+          <div className="chat-box"style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
             <HospitalMap currentUser={currentUser} />
           </div>
         )}
 
         {/* Tab 2.6: Zero-Internet / Low-Bandwidth Offline Suite */}
         {activeTab === 'offline' && (
-          <div className="chat-box" style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
+          <div className="chat-box"style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
             <OfflineEmergencySuite currentUser={currentUser} />
           </div>
         )}
 
         {/* Tab 3: Medical History */}
         {activeTab === 'history' && (
-          <div className="chat-box" style={{ padding: '28px', display: 'block', overflowY: 'auto' }}>
+          <div className="chat-box"style={{ padding: '28px', display: 'block', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
                 <h3 style={{ color: '#063940', margin: 0 }}>Clinical Assessment History</h3>
@@ -1057,7 +1057,7 @@ const HomePage = () => {
             {!historyLoading && historyRecords.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {historyRecords.map((rec) => (
-                  <div key={rec.id} className="history-item-card" style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={rec.id} className="history-item-card"style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <strong style={{ color: '#063940', fontSize: '1rem', textTransform: 'capitalize' }}>
@@ -1093,7 +1093,7 @@ const HomePage = () => {
 
         {/* Tab 4: Health Reports & Analytics */}
         {activeTab === 'reports' && (
-          <div className="chat-box" style={{ padding: '28px', display: 'block', overflowY: 'auto' }}>
+          <div className="chat-box"style={{ padding: '28px', display: 'block', overflowY: 'auto' }}>
             <h3 style={{ color: '#063940', marginBottom: '8px' }}>Comprehensive Health Analytics Report</h3>
             <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px' }}>
               Aggregated longitudinal risk synthesis generated from your clinical assessments.
@@ -1144,7 +1144,7 @@ const HomePage = () => {
 
         {/* Tab 5: Settings & Profile */}
         {activeTab === 'settings' && (
-          <div className="chat-box" style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
+          <div className="chat-box"style={{ padding: '24px', display: 'block', overflowY: 'auto' }}>
             
             {/* Header */}
             <div style={{ marginBottom: '20px' }}>
@@ -1333,7 +1333,7 @@ const HomePage = () => {
                     className="form-input"
                     value={profileFormData.allergies}
                     onChange={(e) => setProfileFormData({...profileFormData, allergies: e.target.value})}
-                    placeholder="e.g. Penicillin, Peanuts, Sulfa (or 'None')"
+                    placeholder="e.g. Penicillin, Peanuts, Sulfa (or'None')"
                   />
                 </div>
 
@@ -1344,7 +1344,7 @@ const HomePage = () => {
                     className="form-input"
                     value={profileFormData.chronicConditions}
                     onChange={(e) => setProfileFormData({...profileFormData, chronicConditions: e.target.value})}
-                    placeholder="e.g. Type 2 Diabetes, Mild Hypertension (or 'None')"
+                    placeholder="e.g. Type 2 Diabetes, Mild Hypertension (or'None')"
                   />
                 </div>
 
@@ -1369,7 +1369,7 @@ const HomePage = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
                 <div>
                   <label className="field-label">Interface & Voice Language</label>
-                  <div className="lang-selector-group" style={{ display: 'inline-flex', marginTop: '6px' }}>
+                  <div className="lang-selector-group"style={{ display: 'inline-flex', marginTop: '6px' }}>
                     <button
                       type="button"
                       className={`lang-pill-btn ${i18n.language === 'en' ? 'active' : ''}`}
@@ -1431,7 +1431,7 @@ const HomePage = () => {
             className={`mobile-nav-item ${activeTab === 'chat' ? 'active' : ''}`}
             onClick={() => { setActiveTab('chat'); setSidebarOpen(false); }}
           >
-            <span className="mobile-nav-icon">💬</span>
+            <span className="mobile-nav-icon"></span>
             <span className="mobile-nav-label">{t('navChat') || 'Chat'}</span>
           </button>
           <button 
@@ -1439,7 +1439,7 @@ const HomePage = () => {
             className={`mobile-nav-item ${activeTab === 'predictor' ? 'active' : ''}`}
             onClick={() => { setActiveTab('predictor'); setSidebarOpen(false); }}
           >
-            <span className="mobile-nav-icon">🩺</span>
+            <span className="mobile-nav-icon"></span>
             <span className="mobile-nav-label">{t('navPredictors') || 'Predictors'}</span>
           </button>
           <button 
@@ -1447,7 +1447,7 @@ const HomePage = () => {
             className={`mobile-nav-item ${activeTab === 'hospitals' ? 'active' : ''}`}
             onClick={() => { setActiveTab('hospitals'); setSidebarOpen(false); }}
           >
-            <span className="mobile-nav-icon">🏥</span>
+            <span className="mobile-nav-icon"></span>
             <span className="mobile-nav-label">{t('navHospitals') || 'Hospitals'}</span>
           </button>
           <button 
@@ -1455,7 +1455,7 @@ const HomePage = () => {
             className={`mobile-nav-item ${activeTab === 'offline' ? 'active' : ''}`}
             onClick={() => { setActiveTab('offline'); setSidebarOpen(false); }}
           >
-            <span className="mobile-nav-icon">📶</span>
+            <span className="mobile-nav-icon"></span>
             <span className="mobile-nav-label">Offline</span>
           </button>
           <button 
@@ -1463,7 +1463,7 @@ const HomePage = () => {
             className={`mobile-nav-item ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => { setActiveTab('history'); setSidebarOpen(false); }}
           >
-            <span className="mobile-nav-icon">📋</span>
+            <span className="mobile-nav-icon"></span>
             <span className="mobile-nav-label">{t('navHistory') || 'History'}</span>
           </button>
         </nav>
@@ -1523,8 +1523,8 @@ const HomePage = () => {
 
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button type="submit" style={{ flex: 1, padding: '10px', background: '#063940', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Add Member</button>
-                <button type="button" onClick={() => setShowAddPersonModal(false)} style={{ flex: 1, padding: '10px', background: '#cbd5e1', color: '#333', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit"style={{ flex: 1, padding: '10px', background: '#063940', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Add Member</button>
+                <button type="button"onClick={() => setShowAddPersonModal(false)} style={{ flex: 1, padding: '10px', background: '#cbd5e1', color: '#333', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
               </div>
             </form>
           </div>
