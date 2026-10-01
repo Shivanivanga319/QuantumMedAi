@@ -233,7 +233,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
 
   // Generate offline SMS & WhatsApp links
   const mapsUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
-  const sosMsg = ` [QUANTUMMED AI EMERGENCY ALERT]\nPatient Status: ${result?.severity || 'CRITICAL'} - ${result?.emergency || 'Acute Emergency'}\nGPS: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}\nLive Map: ${mapsUrl}\nImmediate ambulance & ICU dispatch required. Call 108.`;
+  const sosMsg = `[QUANTUMMED AI EMERGENCY ALERT]\nPatient Status: ${result?.severity || 'CRITICAL'} - ${result?.emergency || 'Acute Emergency'}\nGPS: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}\nLive Map: ${mapsUrl}\nImmediate ambulance dispatch required. Call 108.`;
   const smsIntent = `sms:108?body=${encodeURIComponent(sosMsg)}`;
   const waIntent = `https://wa.me/?text=${encodeURIComponent(sosMsg)}`;
 
@@ -275,7 +275,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                 {t('emergencyModalTitle')}
               </h2>
               <p style={{ margin: 0, color: "#64748b", fontSize: "0.85rem" }}>
-                QuantumMedAI Emergency Triage & ICU Navigator
+                QuantumMedAI Emergency Triage & Hospital Navigator
               </p>
             </div>
           </div>
@@ -417,9 +417,9 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
         {/* Step 3: Loading */}
         {loading && (
           <div style={{ textAlign: "center", padding: "30px 0" }}>
-            <div style={{ fontSize: "2rem", marginBottom: "12px" }}>⏳</div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0d9488", marginBottom: "12px" }}>Analyzing...</div>
             <h4 style={{ color: "#063940", margin: "0 0 6px 0" }}>Analyzing Emergency Parameters...</h4>
-            <p style={{ color: "#64748b", margin: 0, fontSize: "0.9rem" }}>Synthesizing critical first-aid directives and ICU routes</p>
+            <p style={{ color: "#64748b", margin: 0, fontSize: "0.9rem" }}>Synthesizing critical first-aid directives and emergency hospital routes</p>
           </div>
         )}
 
@@ -464,11 +464,11 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
               </ul>
             </div>
 
-            {/* Nearest ICU Emergency Hospitals */}
+            {/* Nearest Emergency Hospitals */}
             {nearestHospitals.length > 0 && (
               <div style={{ marginBottom: '18px' }}>
                 <strong style={{ color: '#063940', display: 'block', marginBottom: '8px', fontSize: '0.92rem' }}>
-                   Nearest Emergency Hospitals & ICU:
+                   Nearest Emergency Hospitals:
                 </strong>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {nearestHospitals.map(h => (
@@ -476,7 +476,7 @@ export default function EmergencyAssistant({ open, onClose, userEmail }) {
                       <div>
                         <strong style={{ color: '#063940', fontSize: '0.88rem' }}>{h.name}</strong>
                         <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                           {h.distance_km} km | ⏱️ ~{h.eta_minutes} mins |  {h.icu_beds_available} ICU Beds
+                           {h.distance_km} km | ETA: ~{h.eta_minutes} mins
                         </div>
                       </div>
                       <a
